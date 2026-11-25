@@ -332,53 +332,37 @@ function normalCanvas(h, D = 7) { const p = new Uint8ClampedArray(S * S * 4);
   return toCanvas(p); }
 
 /* ================= generated sample "photos" ================= */
-const PW = 450, PH = 600;
-const rnd = s => () => (s = Math.imul(s ^ (s >>> 15), 1 | s) + 0x6D2B79F5 | 0, ((s ^ (s >>> 13)) >>> 0) / 4294967296);
-function pxCanvas(fn) {
-  const c = document.createElement('canvas'); c.width = PW; c.height = PH; const g = c.getContext('2d'), im = g.createImageData(PW, PH), d = im.data;
-  for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) { const u = x / PW, v = y / PW, col = fn(u, v, x, y), j = (y * PW + x) * 4;
-    const l = .94 + .08 * (1 - Math.hypot(u - .35, v - .3)); d[j] = col[0] * l; d[j + 1] = col[1] * l; d[j + 2] = col[2] * l; d[j + 3] = 255; }
-  g.putImageData(im, 0, 0); return c;
+const PW = 450, PH = 600;   // capture size (3:4)
+// periodic noise so every sample tiles seamlessly at S×S
+const pn = (x, y, p, sd) => { const ix = Math.floor(x), iy = Math.floor(y), fx = fade(x - ix), fy = fade(y - iy), x0 = mod(ix, p), x1 = mod(ix + 1, p), y0 = mod(iy, p), y1 = mod(iy + 1, p);
+  return lerp(lerp(hash2(x0, y0, sd), hash2(x1, y0, sd), fx), lerp(hash2(x0, y1, sd), hash2(x1, y1, sd), fx), fy); };
+const pfbm = (u, v, p, oct, sd) => { let a = .5, t = 0, sum = 0, fq = 1; for (let k = 0; k < oct; k++) { sum += a * pn(u * p * fq, v * p * fq, p * fq, sd + k * 17); t += a; a *= .5; fq *= 2; } return sum / t; };
+function surface(fn, amp) {     // build a height field, then normalise it to a gentle, even contrast
+  const H = new Float32Array(S * S); let m = 0, q = 0;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const v = fn(x / S, y / S, x, y); H[y * S + x] = v; m += v; }
+  m /= S * S; for (let k = 0; k < S * S; k++) q += (H[k] - m) ** 2; const sd = Math.sqrt(q / (S * S)) + 1e-6;
+  for (let k = 0; k < S * S; k++) H[k] = clamp01(.5 + (H[k] - m) / sd * .15 * amp);
+  return H;
 }
-const mix3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
 const SAMPLES = [
-  ['washi-paper.png', () => { const c = pxCanvas((u, v, x, y) => { const t = .965 + .045 * (fbm(u * 7, v * 7, 4, 2) - .5) + .025 * (hash2(x, y, 4) - .5); return [238 * t, 233 * t, 222 * t]; });
-    const g = c.getContext('2d'), r = rnd(7); g.lineCap = 'round';
-    for (let i = 0; i < 1700; i++) { const x = r() * PW, y = r() * PH, a = r() * Math.PI * 2, L = 18 + r() * 90, bend = (r() - .5) * 30;
-      g.strokeStyle = r() < .7 ? `rgba(255,255,252,${.35 + r() * .4})` : `rgba(150,136,112,${.08 + r() * .14})`; g.lineWidth = .35 + r() * .9;
-      g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * L / 2 - Math.sin(a) * bend, y + Math.sin(a) * L / 2 + Math.cos(a) * bend, x + Math.cos(a) * L, y + Math.sin(a) * L); g.stroke(); }
-    for (let i = 0; i < 26; i++) { g.fillStyle = `rgba(${90 + r() * 40},${70 + r() * 30},50,${.35 + r() * .3})`; g.beginPath(); g.ellipse(r() * PW, r() * PH, .6 + r() * 1.6, .4 + r() * .8, r() * 3, 0, 7); g.fill(); }
-    return c; }],
-  ['crazed-celadon.png', () => pxCanvas((u, v, x, y) => { const n = fbm(u * 3, v * 3, 4, 11), w = .18 * (fbm(u * 5, v * 5, 3, 12) - .5);
-    voronoi((u + w) * 13, (v + w) * 13, 13); const c1 = 1 - smooth(0, .022, VF2 - VF1); voronoi((u - w) * 34, (v - w) * 34, 14); const c2 = 1 - smooth(0, .03, VF2 - VF1);
-    let col = mix3([156, 186, 164], [198, 214, 194], smooth(.3, .75, n)); col = mix3(col, [92, 112, 98], c1 * .6 + c2 * .28);
-    const bub = hash2(x >> 1, y >> 1, 15) > .997 ? .12 : 0; return mix3(col, [240, 246, 238], bub + .06 * Math.pow(n, 3)); })],
-  ['raked-sand.png', () => pxCanvas((u, v, x, y) => { const w = fbm(u * 1.6, v * 1.6, 3, 21), r = Math.sin((v * 46 + 5 * w + 1.2 * Math.sin(u * 5)) * Math.PI * 2), ridge = Math.pow(.5 + .5 * r, 1.6);
-    const g = hash2(x, y, 22), speck = g > .985 ? -.25 : g < .01 ? .12 : 0, t = .86 + .14 * ridge + .05 * (g - .5) + speck; return [216 * t, 201 * t, 174 * t]; })],
-  ['carrara-marble.png', () => pxCanvas((u, v) => { const q = fbm(u * 2.5, v * 2.5, 5, 31), t = Math.abs(Math.sin((u * 2.2 + v * 1.4 + 2.6 * q) * Math.PI)), t2 = Math.abs(Math.sin((u * 5 - v * 3 + 3.5 * fbm(u * 4, v * 4, 4, 32)) * Math.PI));
-    const vein = Math.pow(1 - t, 26) * .75 + Math.pow(1 - t, 5) * .12 + Math.pow(1 - t2, 40) * .35, cloud = .04 * (fbm(u * 6, v * 6, 4, 33) - .5);
-    return mix3([238 + cloud * 200, 236 + cloud * 200, 232 + cloud * 200], [118, 120, 124], vein); })],
-  ['woven-rattan.png', () => { const c = document.createElement('canvas'); c.width = PW; c.height = PH; const g = c.getContext('2d'), r = rnd(41);
-    g.fillStyle = '#2f2216'; g.fillRect(0, 0, PW, PH);
-    for (const [ang, sp, wd] of [[0, 17, 8], [60, 17, 8], [120, 17, 8], [90, 34, 4]]) {
-      g.save(); g.translate(PW / 2, PH / 2); g.rotate(ang * Math.PI / 180);
-      for (let k = -40; k <= 40; k++) { const x = k * sp, gr = g.createLinearGradient(x - wd / 2, 0, x + wd / 2, 0), h = 30 + r() * 10, l = 52 + r() * 10;
-        gr.addColorStop(0, `hsl(${h} 45% ${l - 22}%)`); gr.addColorStop(.45, `hsl(${h} 55% ${l + 8}%)`); gr.addColorStop(1, `hsl(${h} 45% ${l - 26}%)`);
-        g.fillStyle = gr; g.fillRect(x - wd / 2, -600, wd, 1200);
-        g.strokeStyle = 'rgba(80,50,20,.18)'; g.lineWidth = .5; for (let f = 0; f < 3; f++) { const fx = x - wd / 2 + 1.5 + r() * (wd - 3); g.beginPath(); g.moveTo(fx, -600); g.lineTo(fx, 600); g.stroke(); } }
-      g.restore(); }
-    return c; }],
-  ['crumpled-paper.png', () => pxCanvas((u, v, x, y) => { voronoi(u * 7 + .4 * fbm(u * 3, v * 3, 2, 51), v * 7, 52); const a = hash2(VID, 1, 53) * 6.283, s1 = .06 * Math.cos(a - .8), e1 = 1 - smooth(0, .05, VF2 - VF1);
-    voronoi(u * 19, v * 19, 54); const b = hash2(VID, 2, 55) * 6.283, s2 = .03 * Math.cos(b - .8), e2 = 1 - smooth(0, .04, VF2 - VF1);
-    const t = .9 + s1 + s2 - .05 * e1 - .025 * e2 + .02 * (hash2(x, y, 56) - .5); return [236 * t, 232 * t, 224 * t]; })],
-  ['lichen-stone.png', () => pxCanvas((u, v, x, y) => { const n = fbm(u * 5, v * 5, 5, 61), g = hash2(x, y, 62); let col = mix3([108, 106, 101], [168, 165, 158], n);
-    col = mix3(col, [col[0] * .6, col[1] * .6, col[2] * .6], g > .97 ? .6 : 0);
-    const l = fbm(u * 6, v * 6, 4, 63), edge = smooth(.6, .63, l) - smooth(.66, .72, l) * .5, patch = smooth(.6, .64, l), dot = hash2(x >> 2, y >> 2, 64) > .93 ? .2 : 0;
-    col = mix3(col, [192 - 30 * dot, 188 - 20 * dot, 120], patch * (.75 + .25 * fbm(u * 30, v * 30, 2, 65))); return mix3(col, [222, 214, 150], edge * .4); })],
-  ['brushed-copper.png', () => pxCanvas((u, v, x, y) => { const s = fbm(u * 1.2, v * 140, 3, 71), s2 = fbm(u * 6, v * 400, 2, 72), sheen = .5 + .5 * Math.sin(u * 3.2 + .6);
-    const t = .7 + .35 * s + .1 * s2 + .12 * sheen; return mix3([150 * t, 88 * t, 58 * t], [214, 160, 124], .18 * sheen); })],
+  ['frosted-glass.png', () => surface((u, v) => {            // crinkled, hammered glass: warped ridges + fine ripple
+    const w1 = pfbm(u, v, 5, 3, 1) - .5, w2 = pfbm(u, v, 5, 3, 2) - .5, r = 1 - Math.abs(2 * pfbm(u + .06 * w1, v + .06 * w2, 20, 3, 3) - 1);
+    return r * r * .75 + pfbm(u, v, 64, 2, 4) * .25; }, .95)],
+  ['canvas-weave.png', () => surface((u, v, x, y) => {       // fine linen: over/under threads, slubs, fibre noise
+    const n = 128, a = u * n, b = v * n, ov = (Math.floor(a) + Math.floor(b)) & 1, th = Math.sin(Math.PI * (b % 1)), tv = Math.sin(Math.PI * (a % 1));
+    return (ov ? th * (.75 + .25 * tv) : tv * (.75 + .25 * th)) * (.85 + .3 * pfbm(u, v, 16, 2, 6)) + .12 * (hash2(x, y, 7) - .5); }, .8)],
+  ['cold-press.png', () => surface((u, v) => {               // watercolour paper: soft rounded tooth
+    const t = pfbm(u, v, 14, 4, 11), t2 = pfbm(u, v, 44, 2, 12); return t * .65 + t2 * .35 - Math.pow(Math.abs(t - .5), 1.5) * .3; }, .75)],
+  ['granite-speck.png', () => surface((u, v, x, y) => {      // salt-and-pepper grain in 2px clusters, with a few bright flecks
+    const c = hash2(x >> 1, y >> 1, 21), f = hash2(x >> 2, y >> 2, 22); return .4 * pfbm(u, v, 24, 2, 23) + .6 * c + (f > .985 ? .6 : 0); }, .85)],
+  ['dappled-shade.png', () => surface((u, v, x, y) => {      // soft light-through-leaves blobs with film grain
+    const b = smooth(.42, .62, pfbm(u, v, 3, 4, 31)); return .55 * b + .45 * (hash2(x, y, 32) - .5) * (.5 + .5 * b); }, 1)],
+  ['halftone.png', () => surface((u, v, x, y) => {           // diagonal dot screen + stray photocopy specks
+    const p = 4, row = Math.floor(y / p), ox = (row & 1) * p / 2, cx = Math.floor((x - ox) / p) * p + ox + p / 2, cy = row * p + p / 2;
+    const r = .95 + .55 * pfbm(u, v, 4, 3, 41), d = Math.hypot(x + .5 - cx, y + .5 - cy), dot = 1 - smooth(r - .5, r + .5, d);
+    const cxs = x >> 4, cys = y >> 4, dx = (x & 15) - 8, dy = (y & 15) - 8, dir = hash2(cxs, cys, 43) > .5 ? dx - dy : dx + dy, sp = hash2(cxs, cys, 42) > .978 && Math.abs(dx) < 3 && Math.abs(dir) < 1 ? 1 : 0;
+    return 1 - dot * .8 - sp * .9; }, .9)],
 ];
-const makeSample = f => f().toDataURL('image/jpeg', .92);
 // film grain for the camera plastic
 { const c = document.createElement('canvas'); c.width = c.height = 160; const g = c.getContext('2d'), im = g.createImageData(160, 160);
   for (let i = 0; i < 160 * 160; i++) { const v = 200 + 55 * Math.random(); im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; }
@@ -464,10 +448,10 @@ function gradPixels(key) {
 const isGrad = t => !!t && t.startsWith('g:');
 const baseFor = t => isGrad(t) ? gradPixels(t.slice(2)) : solid(t);
 const swatchUrl = key => toCanvas(gradPixels(key)).toDataURL('image/jpeg', .8);
-const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v2';
+const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v3';
 let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } catch {}
 const now = Date.now();
-let items = SAMPLES.map(([name], i) => ({ id: 's' + i, name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
+let items = SAMPLES.map(([name], i) => ({ id: 'n' + i, name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
 try { const saved = JSON.parse(localStorage.getItem(LKEY) || '[]'); if (Array.isArray(saved)) items = saved.filter(x => x && x.url && x.id).concat(items); } catch {}
 let idx = 0, mode = 'image', view = 'roll', tint = 'g:ember';   // default colour: the Ember mesh gradient
 const cache = new Map(); // id -> {ex, tints:{hex:url}}
@@ -488,7 +472,7 @@ async function extracted(it) {
 }
 async function texUrl(it, hex) {
   const c = cache.get(it.id) || {}; cache.set(it.id, c); c.tex = c.tex || {}; const k = hex || 'orig';
-  if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? relief(baseFor(hex), ex.height, isGrad(hex) ? .3 : .55, isGrad(hex) ? 4 : 5) : relief(ex.albedo, ex.height, .35, 4)).toDataURL('image/jpeg', .9); }
+  if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? relief(baseFor(hex), ex.height, isGrad(hex) ? .28 : .38, isGrad(hex) ? 3.5 : 4) : relief(ex.albedo, ex.height, .35, 4)).toDataURL('image/jpeg', .9); }
   return c.tex[k];
 }
 // what to draw for an item: its tileable texture once ready, else the photo (or nothing yet)
@@ -780,7 +764,7 @@ $('dl').addEventListener('click', async () => {
   const it = items[idx], btn = $('dl'); if (!it?.url || btn.classList.contains('busy')) return;
   btn.classList.add('busy');
   try {
-    const ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? relief(baseFor(tint), ex.height, isGrad(tint) ? .3 : .55, isGrad(tint) ? 4 : 5) : relief(ex.albedo, ex.height, .45, 5);
+    const ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? relief(baseFor(tint), ex.height, isGrad(tint) ? .28 : .38, isGrad(tint) ? 3.5 : 4) : relief(ex.albedo, ex.height, .45, 5);
     const meta = { name: it.name, captured: new Date(it.date).toISOString(), location: it.coords, tint: tint || 'original', size: S, tileable: !isGrad(tint) };
     const readme = `# ${base}\n\nTexture pack from Texture Lab. ${S}×${S}px, tiles seamlessly.\n\n- ${base}-height.png: grey relief, 50% grey = flat. Use it to recolour.\n- ${base}-normal.png: normal map (OpenGL, green up) for 3D tools.\n- ${base}-colour.png: the ${tint ? 'tinted' : 'evenly lit'} colour version.\n- ${base}-source.jpg: the photo it came from.\n\n## Figma\nRectangle with your colour fill, then add an Image fill with ${base}-height.png, set to Tile, blend mode Soft light or Overlay.\n\n## CSS\n\`\`\`css\n.surface {\n  background: url("${base}-height.png") 0 0 / 256px, ${tint || '#879c66'};\n  background-blend-mode: soft-light;\n}\n\`\`\`\n`;
     const src = await (await fetch(it.url)).blob();
@@ -809,7 +793,10 @@ addEventListener('resize', fit); fit();
 buildRoll();
 (function gen() {
   const it = items.find(x => x.sample && !x.url); if (!it) return;
-  it.url = makeSample(SAMPLES[it.si][1]); layout(true); if (view === 'grid') buildGrid(); ensureTex();
+  const H = SAMPLES[it.si][1](), A = new Uint8ClampedArray(S * S * 4);
+  for (let k = 0; k < S * S; k++) { const g = 206 + (H[k] - .5) * 70; A[k * 4] = g; A[k * 4 + 1] = g - 1; A[k * 4 + 2] = g - 3; A[k * 4 + 3] = 255; }   // neutral: colour comes from the background
+  const c = cache.get(it.id) || {}; cache.set(it.id, c); c.ex = { height: H, albedo: A };
+  it.url = toCanvas(relief(A, H, .35, 4)).toDataURL('image/jpeg', .9); layout(true); if (view === 'grid') buildGrid(); ensureTex();
   setTimeout(gen, 30);
 })();
 ensureTex(); showModeTag();
