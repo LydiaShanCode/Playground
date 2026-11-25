@@ -124,31 +124,34 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .prt{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.12em;color:#2f62b0}
 .prt.red{color:#c43a2f}
 .prt svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
-.key{position:absolute;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:translateY(-4px);
-  background:radial-gradient(circle at 38% 28%,#ffffff 0,#f0f0ee 22%,#cfcfcb 58%,#a9a9a4 92%,#9a9a95 100%);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.14),inset 0 2px 1px #fff,inset 0 -3px 4px rgba(0,0,0,.18),0 1px 0 #a7a7a2,0 2px 0 #9e9e99,0 3px 0 #969691,0 4px 0 #8e8e89,0 5px 0 #868681,0 6px 1px #7b7b76,0 9px 8px rgba(0,0,0,.3),0 14px 18px rgba(0,0,0,.12);transition:transform .07s,box-shadow .07s}
+.key{position:absolute;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:translateY(-8px);
+  background:radial-gradient(circle at 36% 26%,#ffffff 0,#f4f4f2 20%,#d7d7d3 55%,#b3b3ae 88%,#a2a29d 100%);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),inset 0 2px 1px #fff,inset 0 -2px 3px rgba(0,0,0,.14),0 1px 0 #b4b4af,0 2px 0 #aaaaa5,0 3px 0 #a0a09b,0 4px 0 #979792,0 5px 0 #8e8e89,0 6px 0 #868681,0 7px 0 #7e7e79,0 8px 0 #74746f,2px 12px 8px rgba(0,0,0,.4),4px 16px 16px rgba(0,0,0,.18);transition:transform .08s,box-shadow .08s}
 .key::before{content:"";position:absolute;inset:5px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.035) 0 3deg,rgba(255,255,255,.06) 3deg 6deg);pointer-events:none}
-.key:active,.key.press{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.14),inset 0 2px 3px rgba(0,0,0,.12),0 1px 0 #a7a7a2,0 2px 0 #969691,0 3px 1px #7b7b76,0 4px 4px rgba(0,0,0,.3)}
+.key:active,.key.press{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),inset 0 2px 3px rgba(0,0,0,.12),0 1px 0 #b4b4af,0 2px 0 #979792,0 3px 0 #74746f,1px 5px 4px rgba(0,0,0,.4)}
 .key svg{position:relative;width:18px;height:18px;fill:none;stroke:#55554f;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.dialring{position:absolute;left:146px;top:544px;width:156px;height:156px;border-radius:50%;
-  background:radial-gradient(circle,transparent 58%,rgba(0,0,0,.1) 59%,rgba(255,255,255,.5) 60.5%,transparent 62%),conic-gradient(from 20deg,#f4f4f1,#a9a9a4,#fcfcfa,#9b9b96,#ededea,#a6a6a1,#f8f8f5,#a0a09b,#f4f4f1);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.15),0 1px 0 #a3a39e,0 2px 0 #999994,0 3px 0 #8f8f8a,0 4px 1px #7e7e79,0 8px 9px rgba(0,0,0,.3),0 0 0 7px #c4c4c0,0 0 0 8px rgba(0,0,0,.18),0 1px 0 9px rgba(255,255,255,.6)}
-.dialring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.055) 0 2deg,transparent 2deg 4deg)}
+.dialring{position:absolute;left:180px;top:565px;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle,#2e2e2c 0 31%,rgba(0,0,0,.25) 31.5%,transparent 34%),conic-gradient(from 20deg,#f4f4f1,#a9a9a4,#fcfcfa,#9b9b96,#ededea,#a6a6a1,#f8f8f5,#a0a09b,#f4f4f1);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.15),0 1px 0 #a3a39e,0 2px 0 #999994,0 3px 0 #8f8f8a,0 4px 0 #858580,0 5px 1px #77776f,2px 10px 10px rgba(0,0,0,.32)}
+.dialring::before{content:"";position:absolute;inset:7px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.05) 0 2deg,transparent 2deg 4deg);-webkit-mask:radial-gradient(circle,transparent 0 37%,#000 38%);mask:radial-gradient(circle,transparent 0 37%,#000 38%)}
 .dialring .tick{position:absolute;width:5px;height:5px;border-radius:50%;background:#55554f;box-shadow:0 1px 0 rgba(255,255,255,.7)}
-.key.big{left:44px !important;top:42px !important;width:68px;height:68px;font:600 9px/1 Geist,sans-serif;letter-spacing:.12em;color:#62625c;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.16),inset 0 2px 1px #fff,inset 0 -3px 5px rgba(0,0,0,.2),0 1px 0 #a7a7a2,0 2px 0 #9e9e99,0 3px 0 #969691,0 4px 0 #8e8e89,0 5px 0 #868681,0 6px 1px #7b7b76,0 9px 8px rgba(0,0,0,.32),0 14px 16px rgba(0,0,0,.14)}
-.key.big:active,.key.big.press{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.16),inset 0 2px 4px rgba(0,0,0,.16),0 1px 0 #a7a7a2,0 2px 0 #969691,0 3px 1px #7b7b76,0 4px 4px rgba(0,0,0,.3)}
+.key.big{left:39px !important;top:39px !important;width:72px;height:72px;font:600 9px/1 Geist,sans-serif;letter-spacing:.12em;color:#62625c;transform:translateY(-9px);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.14),inset 0 2px 1px #fff,inset 0 -3px 5px rgba(0,0,0,.18),0 1px 0 #b4b4af,0 2px 0 #aaaaa5,0 3px 0 #a0a09b,0 4px 0 #979792,0 5px 0 #8e8e89,0 6px 0 #868681,0 7px 0 #7e7e79,0 8px 0 #74746f,0 9px 0 #6c6c67,2px 14px 10px rgba(0,0,0,.42),5px 20px 18px rgba(0,0,0,.18)}
+.key.big:active,.key.big.press{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.14),inset 0 2px 4px rgba(0,0,0,.16),0 1px 0 #b4b4af,0 2px 0 #979792,0 3px 0 #74746f,1px 5px 4px rgba(0,0,0,.4)}
 .key.big span{position:relative}
-.slide{position:absolute;left:28px;top:532px;width:106px;height:24px;border-radius:12px;background:linear-gradient(180deg,#8d8d89,#b4b4b0);box-shadow:inset 0 2px 3px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.8)}
-.slide .knob{position:absolute;left:3px;top:1px;width:52px;height:20px;border-radius:9px;transition:transform .18s cubic-bezier(.3,.7,.2,1);
-  background:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 1px,transparent 1px 4px),linear-gradient(180deg,#ffffff,#cfcfcb 70%,#b5b5b0);box-shadow:inset 0 1px 0 #fff,0 1px 0 #9a9a95,0 2px 0 #8a8a85,0 3px 1px #77776f,0 5px 5px rgba(0,0,0,.35)}
-.slide.front .knob{transform:translateX(48px)}
+.slide{position:absolute;left:77px;top:631px;width:76px;height:22px;border-radius:11px;background:linear-gradient(180deg,#7d7d79,#b4b4b0);box-shadow:inset 0 2px 3px rgba(0,0,0,.5),0 1px 0 rgba(255,255,255,.85)}
+.slide .knob{position:absolute;left:2px;top:-3px;width:42px;height:22px;border-radius:9px;transition:transform .18s cubic-bezier(.3,.7,.2,1);
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 1px,transparent 1px 4px),linear-gradient(180deg,#ffffff,#d3d3cf 70%,#b9b9b4);box-shadow:inset 0 1px 0 #fff,0 1px 0 #a5a5a0,0 2px 0 #97978f,0 3px 0 #87877f,0 4px 1px #75756d,1px 7px 6px rgba(0,0,0,.38)}
+.slide.front .knob{transform:translateX(30px)}
 .vf{position:absolute;left:300px;top:522px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#5b5f63,#14161a 58%,#050607);
   box-shadow:inset 0 2px 4px rgba(0,0,0,.6),0 0 0 4px #ececea,0 0 0 5px #b2b2ad,0 0 0 7px #d9d9d6,0 1px 0 7px #fff,0 3px 0 7px #9b9b96,0 6px 8px 7px rgba(0,0,0,.25)}
 .vf::after{content:"";position:absolute;left:11px;top:9px;width:12px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);transform:rotate(-25deg)}
 .dots{position:absolute;left:322px;top:690px;width:44px;height:44px}
 .dots i{position:absolute;width:5px;height:5px;border-radius:50%;background:#3d3d3a;box-shadow:inset 0 1px 1px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.8)}
-.lbl{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.14em;color:#6c6c67;text-align:center;width:80px;margin-left:-40px;text-shadow:0 1px 0 rgba(255,255,255,.6)}
+.sock{position:absolute;width:66px;height:66px;border-radius:50%;background:conic-gradient(from 30deg,#f6f6f3,#a7a7a2,#fbfbf9,#9a9a95,#efefec,#a3a39e,#f6f6f3);box-shadow:0 1px 0 rgba(255,255,255,.9),0 -1px 1px rgba(0,0,0,.18),inset 0 0 0 1px rgba(0,0,0,.14)}
+.sock::before{content:"";position:absolute;inset:6px;border-radius:50%;background:#2e2e2c;box-shadow:inset 0 2px 3px rgba(0,0,0,.75)}
+.sock .key{left:8px;top:8px}
+.lbl{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.14em;color:#6c6c67;text-align:right;width:56px;text-shadow:0 1px 0 rgba(255,255,255,.6)}
 .strip{position:absolute;left:0;right:0;top:806px;height:67px;display:flex;align-items:center;gap:4px;padding:0 177px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:340px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent)}
 .strip::-webkit-scrollbar{display:none}
 .strip button{flex:none;width:48px;height:63px;border-radius:3px;background-size:cover;background-position:center;background-color:#bdbdbb;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;box-shadow:0 2px 4px rgba(0,0,0,.18)}
@@ -224,24 +227,21 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
         <div class="brand" aria-hidden="true">textura</div>
         <div class="model" aria-hidden="true">TL-1 DIGITAL</div>
       </div>
+      <span class="lbl" style="left:24px;top:561px">LOAD</span>
+      <div class="sock" style="left:87px;top:533px"><button class="key" id="loadBtn" aria-label="Load a photo"><svg viewBox="0 0 24 24"><path d="M12 16V5m0 0-4 4m4-4 4 4"/><path d="M5 15v3a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-3"/></svg></button></div>
       <button class="slide" id="flipBtn" aria-label="Switch between back and front camera"><span class="knob"></span></button>
-      <span class="prt" style="left:30px;top:566px"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M9 7l1.5-2h3L15 7"/></svg></span>
-      <span class="prt" style="left:46px;top:568px">REAR</span>
-      <span class="prt red" style="left:92px;top:568px">FRONT</span>
-      <div class="vf" aria-hidden="true"></div>
-      <span class="lbl" style="left:72px;top:610px">LOAD</span>
-      <button class="key" id="loadBtn" style="left:45px;top:625px" aria-label="Load a photo"><svg viewBox="0 0 24 24"><path d="M12 16V5m0 0-4 4m4-4 4 4"/><path d="M5 15v3a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-3"/></svg></button>
-      <span class="lbl" style="left:72px;top:690px">ROLL</span>
-      <button class="key" id="rollBtn" style="left:45px;top:705px" aria-label="Back to roll"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"/></svg></button>
+      <span class="prt" style="left:79px;top:663px">REAR</span><span class="prt red" style="left:118px;top:663px">FRONT</span>
+      <span class="lbl" style="left:24px;top:709px">ROLL</span>
+      <div class="sock" style="left:87px;top:681px"><button class="key" id="rollBtn" aria-label="Back to roll"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"/></svg></button></div>
       <div class="dialring">
-        <i class="tick" style="left:75.5px;top:12px"></i><i class="tick" style="left:75.5px;bottom:12px"></i><i class="tick" style="left:12px;top:75.5px"></i><i class="tick" style="right:12px;top:75.5px"></i>
+        <i class="tick" style="left:72.5px;top:11px"></i><i class="tick" style="left:72.5px;bottom:11px"></i><i class="tick" style="left:11px;top:72.5px"></i><i class="tick" style="right:11px;top:72.5px"></i>
         <button class="key big" id="shutter" aria-label="Take photo"><span>SNAP</span></button>
       </div>
-      <span class="prt" style="left:213px;top:526px"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span>
-      <span class="prt red" style="left:312px;top:618px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 6 14h5l-1 7 7-11h-5z"/></svg></span>
-      <span class="prt" style="left:122px;top:618px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-4-3-6-6-6-9a6 6 0 0 1 12 0c0 3-2 6-6 9z"/><path d="M12 12V7"/></svg></span>
-      <span class="prt" style="left:213px;top:713px"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2.5 2M9 3h6"/></svg></span>
-      <div class="dots" aria-hidden="true"><i style="left:0px;top:10px"></i><i style="left:10px;top:4px"></i><i style="left:20px;top:0px"></i><i style="left:10px;top:16px"></i><i style="left:20px;top:10px"></i><i style="left:30px;top:4px"></i><i style="left:20px;top:22px"></i><i style="left:30px;top:16px"></i><i style="left:40px;top:10px"></i><i style="left:30px;top:28px"></i></div>
+      <span class="prt" style="left:248px;top:540px"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span>
+      <span class="prt red" style="left:340px;top:633px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3 6 14h5l-1 7 7-11h-5z"/></svg></span>
+      <span class="prt" style="left:248px;top:726px"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2.5 2M9 3h6"/></svg></span>
+      <span class="prt" style="left:160px;top:633px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-4-3-6-6-6-9a6 6 0 0 1 12 0c0 3-2 6-6 9z"/><path d="M12 12V7"/></svg></span>
+      <div class="dots" style="left:326px;top:698px" aria-hidden="true"><i style="left:0px;top:10px"></i><i style="left:10px;top:4px"></i><i style="left:20px;top:0px"></i><i style="left:10px;top:16px"></i><i style="left:20px;top:10px"></i><i style="left:30px;top:4px"></i><i style="left:20px;top:22px"></i><i style="left:30px;top:16px"></i><i style="left:40px;top:10px"></i><i style="left:30px;top:28px"></i></div>
     </div>
     <div class="strip" id="strip"></div>
   </section>
