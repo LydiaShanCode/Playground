@@ -309,7 +309,11 @@ function extractFrom(img, detail = 12, contrast = 1) {
   const Hc = new Float32Array(N);
   for (let i = 0; i < N; i++) { const ls = Math.sqrt(loc[i]); const z = hp[i] / (.55 * ls + .45 * gstd + 1e-5); Hc[i] = .5 + Math.max(-3, Math.min(3, z)) * .12 * contrast; }
   const big = blur(L, C, C, 48, 2); let Lm = 0; for (let i = 0; i < N; i++) Lm += big[i]; Lm /= N;
-  const ch = [R, G, Bl].map(c => { const o = new Float32Array(N); for (let i = 0; i < N; i++) o[i] = Math.min(1, c[i] * Lm / Math.max(.05, big[i])); return o; });
+  const ch = [new Float32Array(N), new Float32Array(N), new Float32Array(N)];
+  for (let i = 0; i < N; i++) {            // even out lighting by 60%, scaling all channels together so hue never shifts
+    const k = 1 + (Lm / Math.max(.05, big[i]) - 1) * .6; let r = R[i] * k, g = G[i] * k, b = Bl[i] * k; const mx = Math.max(r, g, b);
+    if (mx > 1) { r /= mx; g /= mx; b /= mx; } ch[0][i] = r; ch[1][i] = g; ch[2][i] = b;
+  }
   const H = tileField(Hc, .5, true), T = ch.map(c => tileField(c, 0, false)), A = new Uint8ClampedArray(S * S * 4);
   for (let i = 0; i < S * S; i++) { H[i] = clamp01(H[i]); A[i * 4] = T[0][i] * 255; A[i * 4 + 1] = T[1][i] * 255; A[i * 4 + 2] = T[2][i] * 255; A[i * 4 + 3] = 255; }
   return { height: H, albedo: A };
@@ -503,11 +507,15 @@ async function texUrl(it, hex) {
   return c.tex[k];
 }
 // what to draw for an item: its tileable texture once ready, else the photo (or nothing yet)
-const texOf = it => { const u = cache.get(it.id)?.tex?.[tint || 'orig']; return u ? { url: u, tiled: !isGrad(tint) } : { url: tint ? null : it.url, tiled: false }; };
+const texOf = it => {
+  if (!it.sample && !tint) return { url: it.url, tiled: false };            // your photo, exactly as captured
+  const u = cache.get(it.id)?.tex?.[tint || 'orig'];
+  return u ? { url: u, tiled: it.sample && !isGrad(tint) } : { url: tint ? null : it.url, tiled: false };
+};
 let texJob = 0;
 async function ensureTex() {
   const job = ++texJob, order = [idx, idx + 1, idx - 1, idx + 2, idx - 2, ...items.keys()].filter((v, k, a) => v >= 0 && v < items.length && a.indexOf(v) === k);
-  for (const i of order) { if (job !== texJob) return; const it = items[i]; if (!it || !it.url || cache.get(it.id)?.tex?.[tint || 'orig']) continue;
+  for (const i of order) { if (job !== texJob) return; const it = items[i]; if (!it || !it.url || (!tint && !it.sample) || cache.get(it.id)?.tex?.[tint || 'orig']) continue;
     await new Promise(r => setTimeout(r, 0)); try { await texUrl(it, tint); } catch { continue; } if (job === texJob) { layout(); if (view === 'grid') buildGrid(); } }
 }
 
@@ -745,6 +753,9 @@ async function addCapture(url) {
 async function snap() {
   const sh = $('shutter'); sh.classList.add('press'); setTimeout(() => sh.classList.remove('press'), 120);
   if (!stream || !video.videoWidth) { $('file').click(); return; }
+  { const t = document.createElement('canvas'); t.width = t.height = 16; const g = t.getContext('2d', { willReadFrequently: true }); g.drawImage(video, 0, 0, 16, 16);
+    const d = g.getImageData(0, 0, 16, 16).data; let sum = 0; for (let i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] + d[i + 2];
+    if (sum / (16 * 16 * 3) < 6) { toast('Camera isn’t ready yet. Try again in a second.'); return; } }
   const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
   await addCapture(frameToUrl(video, video.videoWidth, video.videoHeight)); toast('Captured. Press ROLL to see it.');
 }
