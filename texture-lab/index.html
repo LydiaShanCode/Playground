@@ -75,6 +75,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .info{position:absolute;left:36.4px;top:562.5px;width:326px;padding:4px;display:flex;justify-content:space-between;align-items:flex-start;transition:opacity .25s}
 .info h2{margin:0;font:400 20px/normal Newsreader,Georgia,serif;letter-spacing:-.005em;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .meta{margin-top:14px;font-size:12px;line-height:16px;color:var(--muted)}
+.acts{display:flex;gap:6px;flex:none}
 .dl{width:31.7px;height:31px;border-radius:6px;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none}
 .dl .ic{width:16px;height:16px;stroke-width:1.7}
 .dl.busy{opacity:.5;cursor:progress}
@@ -130,6 +131,10 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#1d1d1d;color:#fff;padding:9px 14px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.act{pointer-events:auto;display:flex;gap:12px;align-items:center}
+.toast button{color:#9fc0ff;font-weight:500}
+.empty{position:absolute;left:40px;right:40px;top:250px;text-align:center;font:20px/1.3 Newsreader,Georgia,serif;color:#555}
+.empty small{display:block;font:13px Geist,sans-serif;color:var(--muted);margin-top:8px}
 @media(prefers-reduced-motion:reduce){.it,.screen,.toast{transition:none}.shimmer{animation:none}}
 </style>
 </head>
@@ -157,8 +162,12 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
         <h2 id="name">—</h2>
         <div class="meta"><div id="when"></div><div id="where"></div></div>
       </div>
+      <div class="acts">
+      <button class="dl" id="del" aria-label="Delete texture"><svg class="ic" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6"/><path d="M6 7l1 12a1.5 1.5 0 0 0 1.5 1.4h7A1.5 1.5 0 0 0 17 19l1-12M9 7V4.8A.8.8 0 0 1 9.8 4h4.4a.8.8 0 0 1 .8.8V7"/></svg></button>
       <button class="dl" id="dl" aria-label="Download texture pack"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3.5v11m0 0-4.5-4.5M12 14.5l4.5-4.5"/><path d="M4 15.5v3A2 2 0 0 0 6 20.5h12a2 2 0 0 0 2-2v-3"/></svg></button>
+      </div>
     </div>
+    <p class="empty" id="empty" hidden>No textures yet<small>Tap + to capture a surface.</small></p>
     <p class="hint" id="hint">Swipe through your textures. Tap the circle to recolour, the camera to collect more.</p>
 
     <nav class="nav" role="group" aria-label="Main">
@@ -309,18 +318,21 @@ function makeSample(f) {
 /* ================= state ================= */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600); };
+const toast = (m, act, fn) => { const t = $('toast'); t.textContent = m; t.classList.toggle('act', !!act);
+  if (act) { const b = document.createElement('button'); b.textContent = act; b.onclick = () => { t.classList.remove('show'); fn(); }; t.append(b); }
+  t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), act ? 5000 : 2600); };
 const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'];
-const LKEY = 'texture-lab.roll.v1';
+const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v1';
+let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } catch {}
 const now = Date.now();
-let items = SAMPLES.map(([name], i) => ({ id: 's' + i, name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null }));
+let items = SAMPLES.map(([name], i) => ({ id: 's' + i, name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
 try { const saved = JSON.parse(localStorage.getItem(LKEY) || '[]'); if (Array.isArray(saved)) items = saved.filter(x => x && x.url && x.id).concat(items); } catch {}
 let idx = 0, mode = 'image', view = 'roll', tint = null;
 const cache = new Map(); // id -> {ex, tints:{hex:url}}
 
 function persist() {
   const mine = items.filter(x => !x.sample).slice(0, 14).map(({ id, name, date, coords, url }) => ({ id, name, date, coords, url }));
-  try { localStorage.setItem(LKEY, JSON.stringify(mine)); } catch { toast('Storage is full here, so older captures won’t be kept after a reload.'); }
+  try { localStorage.setItem(DKEY, JSON.stringify(gone)); localStorage.setItem(LKEY, JSON.stringify(mine)); } catch { toast('Storage is full here, so older captures won’t be kept after a reload.'); }
 }
 const fmtDate = t => { const d = new Date(t); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); };
 const dms = (v, p, n) => { const a = Math.abs(v), d = Math.floor(a), m = Math.floor((a - d) * 60), s = Math.round(((a - d) * 60 - m) * 60); return `${d}° ${m}' ${s}" ${v >= 0 ? p : n}`; };
@@ -427,7 +439,8 @@ function paintItem(el, it, asObj, force) {
   if (asObj && (ob.dataset.k !== okey || force)) { ob.innerHTML = (mode === 'envelope' ? envelopeSVG : folderSVG)(it.id + '_' + mode, url, !!tint); ob.dataset.k = okey; }
 }
 function showInfo() {
-  const it = items[idx]; if (!it) return;
+  const it = items[idx], none = !it; $('empty').hidden = !none || view === 'grid'; $('info').style.visibility = none ? 'hidden' : ''; $('hint').style.visibility = none ? 'hidden' : '';
+  if (none) return;
   $('name').textContent = it.name; $('when').textContent = fmtDate(it.date);
   $('where').textContent = it.coords || (it.sample ? 'Generated sample texture' : 'Location not saved');
 }
@@ -539,6 +552,16 @@ function buildStrip() {
 }
 $('strip').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; idx = +b.dataset.i; showScreen('gallery'); });
 
+/* ================= delete with undo ================= */
+$('del').addEventListener('click', () => {
+  const it = items[idx]; if (!it) return;
+  const at = idx; items.splice(at, 1); if (it.sample) gone.push(it.id);
+  idx = Math.min(idx, Math.max(0, items.length - 1)); persist(); buildRoll(); if (view === 'grid') buildGrid();
+  toast(`Deleted ${it.name}`, 'Undo', () => {
+    items.splice(at, 0, it); gone = gone.filter(g => g !== it.id); idx = at; persist(); buildRoll(); if (view === 'grid') buildGrid(); if (tint) ensureTints();
+  });
+});
+
 /* ================= download: texture pack .zip ================= */
 let dlCap = null; window.claude?.use?.('downloads').then(d => { dlCap = d; }).catch(() => {});
 const blobOf = (cv, type = 'image/png', q) => new Promise(r => cv.toBlob(r, type, q));
@@ -593,7 +616,7 @@ addEventListener('resize', fit); fit();
 buildRoll();
 (function gen() {
   const it = items.find(x => x.sample && !x.url); if (!it) return;
-  it.url = makeSample(SAMPLES[+it.id.slice(1)][1]); layout(true); if (view === 'grid') buildGrid(); if (tint) ensureTints();
+  it.url = makeSample(SAMPLES[it.si][1]); layout(true); if (view === 'grid') buildGrid(); if (tint) ensureTints();
   setTimeout(gen, 30);
 })();
 }
