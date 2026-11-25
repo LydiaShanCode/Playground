@@ -469,7 +469,7 @@ let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } ca
 const now = Date.now();
 let items = SAMPLES.map(([name], i) => ({ id: 's' + i, name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
 try { const saved = JSON.parse(localStorage.getItem(LKEY) || '[]'); if (Array.isArray(saved)) items = saved.filter(x => x && x.url && x.id).concat(items); } catch {}
-let idx = 0, mode = 'image', view = 'roll', tint = null;
+let idx = 0, mode = 'image', view = 'roll', tint = 'g:ember';   // default colour: the Ember mesh gradient
 const cache = new Map(); // id -> {ex, tints:{hex:url}}
 
 function persist() {
@@ -615,6 +615,8 @@ const pop = $('pop');
 pop.innerHTML = TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('')
   + Object.entries(GRADS).map(([k, g]) => `<button data-t="g:${k}" class="grad" style="background-image:url(${swatchUrl(k)})" aria-label="${g.name} gradient" aria-pressed="false"></button>`).join('')
   + '<p>Solid colours, then mesh gradients</p>';
+for (const x of pop.querySelectorAll('button')) x.setAttribute('aria-pressed', (x.dataset.t || null) === tint);
+$('navSw').style.background = isGrad(tint) ? `center/cover url(${swatchUrl(tint.slice(2))})` : (tint || '');
 const closePop = () => { pop.classList.add('off'); $('navColour').setAttribute('aria-expanded', 'false'); };
 $('navColour').addEventListener('click', e => { e.stopPropagation(); const wasOpen = !pop.classList.contains('off') && pop.classList.contains('low'); closePop(); if (wasOpen) return; pop.classList.add('low'); pop.classList.remove('off'); $('navColour').setAttribute('aria-expanded', 'true'); });
 document.addEventListener('click', e => { if (!pop.contains(e.target) && !$('navColour').contains(e.target)) closePop(); });
