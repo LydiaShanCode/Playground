@@ -51,6 +51,8 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .it:not(.center) .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,0) 60%)}
 .it .ph{position:absolute;inset:0;overflow:hidden;border-radius:inherit;background-color:#bdbdbb;background-repeat:no-repeat;background-position:0 0;background-size:332px 442px;transition:opacity .35s}
 .it.tile .ph{background-repeat:repeat;background-size:112px 112px;background-position:center}
+.it.tile.glassy .ph{background-size:256px 256px}
+.grid .g.tile.glassy{background-size:150px}
 .it.card .ph{box-shadow:0 10px 18px -6px rgba(0,0,0,.35),0 2px 3px rgba(0,0,0,.2)}
 .it .obj{position:absolute;inset:0;opacity:0;transition:opacity .35s}
 .it.as-obj .ph{opacity:0}
@@ -324,6 +326,25 @@ function relief(base, h, k = .8, D = 7, rep = 1) {
   }
   return out;
 }
+function glass(base, h, rep = 1, opts = {}) {
+  const { refr = 12, spec = .6, frost = .08, shade = .12, D = 7 } = opts, out = new Uint8ClampedArray(base.length);
+  const L = [-.45, -.6, .66], ln = Math.hypot(...L); L[0] /= ln; L[1] /= ln; L[2] /= ln;
+  const Hh = [L[0], L[1], L[2] + 1], hn = Math.hypot(...Hh); Hh[0] /= hn; Hh[1] /= hn; Hh[2] /= hn;
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const hx = (x * rep) & M, hy = (y * rep) & M;
+    const gx = h[hy * S + ((hx + 1) & M)] - h[hy * S + ((hx - 1) & M)], gy = h[((hy + 1) & M) * S + hx] - h[((hy - 1) & M) * S + hx];
+    let nx = -gx * D, ny = -gy * D, nz = 1; const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+    // refraction: look through the bump at a shifted spot of the background
+    const sx = Math.min(M, Math.max(0, Math.round(x - nx * refr * rep))), sy = Math.min(M, Math.max(0, Math.round(y - ny * refr * rep))), si = (sy * S + sx) * 4, j = (y * S + x) * 4;
+    const nl = nx * L[0] + ny * L[1] + nz * L[2], nh = Math.max(0, nx * Hh[0] + ny * Hh[1] + nz * Hh[2]);
+    const dim = 1 + Math.min(0, nl - L[2]) * shade * 2.5, glint = Math.pow(nh, 70) * spec + Math.pow(nh, 14) * .1 * spec;
+    for (let c = 0; c < 3; c++) { let v = base[si + c] / 255 * dim; v = v + (1 - v) * frost; out[j + c] = Math.min(255, (v + glint) * 255); }
+    out[j + 3] = 255;
+  }
+  return out;
+}
+// each texture picks its material: glass refracts and glints, everything else is relief
+const finish = (it, base, h, k, D, rp = 1) => it.kind === 'glass' ? glass(base, h, 1) : relief(base, h, k, D, rp);
 function toCanvas(px, w = S, h = S) { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').putImageData(new ImageData(px, w, h), 0, 0); return c; }
 function heightCanvas(h) { const p = new Uint8ClampedArray(S * S * 4); for (let i = 0; i < S * S; i++) { p[i * 4] = p[i * 4 + 1] = p[i * 4 + 2] = h[i] * 255; p[i * 4 + 3] = 255; } return toCanvas(p); }
 function normalCanvas(h, D = 7) { const p = new Uint8ClampedArray(S * S * 4);
@@ -336,6 +357,11 @@ const PW = 450, PH = 600;   // capture size (3:4)
 // periodic noise so every sample tiles seamlessly at S×S
 const pn = (x, y, p, sd) => { const ix = Math.floor(x), iy = Math.floor(y), fx = fade(x - ix), fy = fade(y - iy), x0 = mod(ix, p), x1 = mod(ix + 1, p), y0 = mod(iy, p), y1 = mod(iy + 1, p);
   return lerp(lerp(hash2(x0, y0, sd), hash2(x1, y0, sd), fx), lerp(hash2(x0, y1, sd), hash2(x1, y1, sd), fx), fy); };
+let PF1 = 0;
+function pvor(u, v, G, sd) { const x = u * G, y = v * G, cx = Math.floor(x), cy = Math.floor(y); let f1 = 9;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const gx = cx + dx, gy = cy + dy, wx = mod(gx, G), wy = mod(gy, G);
+    const d = Math.hypot(gx + .15 + .7 * hash2(wx, wy, sd) - x, gy + .15 + .7 * hash2(wx, wy, sd + 7) - y); if (d < f1) f1 = d; }
+  PF1 = f1; return f1; }
 const pfbm = (u, v, p, oct, sd) => { let a = .5, t = 0, sum = 0, fq = 1; for (let k = 0; k < oct; k++) { sum += a * pn(u * p * fq, v * p * fq, p * fq, sd + k * 17); t += a; a *= .5; fq *= 2; } return sum / t; };
 function surface(fn, amp) {     // build a height field, then normalise it to a gentle, even contrast
   const H = new Float32Array(S * S); let m = 0, q = 0;
@@ -345,9 +371,10 @@ function surface(fn, amp) {     // build a height field, then normalise it to a 
   return H;
 }
 const SAMPLES = [
-  ['frosted-glass.png', () => surface((u, v) => {            // crinkled, hammered glass: warped ridges + fine ripple
-    const w1 = pfbm(u, v, 5, 3, 1) - .5, w2 = pfbm(u, v, 5, 3, 2) - .5, r = 1 - Math.abs(2 * pfbm(u + .05 * w1, v + .05 * w2, 36, 3, 3) - 1);
-    return r * r * .75 + pfbm(u, v, 64, 2, 4) * .25; }, .95)],
+  ['frosted-glass.png', () => surface((u, v) => {            // hammered glass: small warped domes + fine crinkle
+    const w1 = pfbm(u, v, 6, 3, 1) - .5, w2 = pfbm(u, v, 6, 3, 2) - .5, wu = mod(u + .035 * w1, 1), wv = mod(v + .035 * w2, 1);
+    const dome = 1 - Math.min(1, pvor(wu, wv, 30, 5) * 1.2) ** 2, crinkle = 1 - Math.abs(2 * pfbm(wu, wv, 34, 2, 3) - 1);
+    return dome * .62 + crinkle * .38; }, 1.1), 'glass'],
   ['canvas-weave.png', () => surface((u, v, x, y) => {       // fine linen: over/under threads, slubs, fibre noise
     const n = 192, a = u * n, b = v * n, ov = (Math.floor(a) + Math.floor(b)) & 1, th = Math.sin(Math.PI * (b % 1)), tv = Math.sin(Math.PI * (a % 1));
     return (ov ? th * (.75 + .25 * tv) : tv * (.75 + .25 * th)) * (.85 + .3 * pfbm(u, v, 16, 2, 6)) + .12 * (hash2(x, y, 7) - .5); }, .8)],
@@ -451,7 +478,7 @@ const swatchUrl = key => toCanvas(gradPixels(key)).toDataURL('image/jpeg', .8);
 const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v3';
 let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } catch {}
 const now = Date.now();
-let items = SAMPLES.map(([name], i) => ({ id: 'n' + i, name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
+let items = SAMPLES.map(([name, , kind], i) => ({ id: 'n' + i, kind: kind || 'relief', name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
 try { const saved = JSON.parse(localStorage.getItem(LKEY) || '[]'); if (Array.isArray(saved)) items = saved.filter(x => x && x.url && x.id).concat(items); } catch {}
 let idx = 0, mode = 'image', view = 'roll', tint = 'g:ember';   // default colour: the Ember mesh gradient
 const cache = new Map(); // id -> {ex, tints:{hex:url}}
@@ -472,7 +499,7 @@ async function extracted(it) {
 }
 async function texUrl(it, hex) {
   const c = cache.get(it.id) || {}; cache.set(it.id, c); c.tex = c.tex || {}; const k = hex || 'orig';
-  if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? relief(baseFor(hex), ex.height, isGrad(hex) ? .2 : .32, 3, isGrad(hex) ? 3 : 1) : relief(ex.albedo, ex.height, .24, 3)).toDataURL('image/jpeg', .9); }
+  if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? finish(it, baseFor(hex), ex.height, isGrad(hex) ? .2 : .32, 3, isGrad(hex) ? 3 : 1) : finish(it, ex.albedo, ex.height, .24, 3)).toDataURL('image/jpeg', .9); }
   return c.tex[k];
 }
 // what to draw for an item: its tileable texture once ready, else the photo (or nothing yet)
@@ -566,7 +593,7 @@ function layout(force) {
 }
 function paintItem(el, it, asObj, force) {
   const { url, tiled } = texOf(it), ph = el.querySelector('.ph');
-  ph.classList.toggle('shimmer', !url); el.classList.toggle('tile', tiled);
+  ph.classList.toggle('shimmer', !url); el.classList.toggle('tile', tiled); el.classList.toggle('glassy', it.kind === 'glass');
   const key = (url ? url.length + url.slice(-24) : 'none') + mode + (tint || '') + tiled;
   if (ph.dataset.k !== key) { ph.style.backgroundImage = url ? `url(${url})` : ''; ph.dataset.k = key; }
   const ob = el.querySelector('.obj'), okey = asObj ? key : '';
@@ -609,7 +636,7 @@ pop.addEventListener('click', async e => { const b = e.target.closest('button');
   for (const x of pop.querySelectorAll('button')) x.setAttribute('aria-pressed', x === b);
   $('navSw').style.background = isGrad(tint) ? `center/cover url(${swatchUrl(tint.slice(2))})` : (tint || ''); closePop(); layout(true); if (view === 'grid') buildGrid(); ensureTex(); });
 function buildGrid() {
-  $('grid').innerHTML = items.map((it, i) => { const { url: u, tiled } = texOf(it); return `<button data-i="${i}" aria-label="${esc(it.name)}"><div class="g${tiled ? ' tile' : ''}${u ? '' : ' shimmer'}" style="${u ? `background-image:url(${u})` : ''}"></div><div class="n">${esc(it.name)}</div><div class="d">${esc(fmtDate(it.date))}</div></button>`; }).join('');
+  $('grid').innerHTML = items.map((it, i) => { const { url: u, tiled } = texOf(it); return `<button data-i="${i}" aria-label="${esc(it.name)}"><div class="g${tiled ? ' tile' : ''}${it.kind === 'glass' ? ' glassy' : ''}${u ? '' : ' shimmer'}" style="${u ? `background-image:url(${u})` : ''}"></div><div class="n">${esc(it.name)}</div><div class="d">${esc(fmtDate(it.date))}</div></button>`; }).join('');
 }
 $('grid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; idx = +b.dataset.i; setView('roll'); layout(); ensureTex(); });
 function setView(v) {
@@ -765,7 +792,7 @@ $('dl').addEventListener('click', async () => {
   const it = items[idx], btn = $('dl'); if (!it?.url || btn.classList.contains('busy')) return;
   btn.classList.add('busy');
   try {
-    const ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? relief(baseFor(tint), ex.height, isGrad(tint) ? .2 : .32, 3) : relief(ex.albedo, ex.height, .3, 3);
+    const ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? finish(it, baseFor(tint), ex.height, isGrad(tint) ? .2 : .32, 3) : finish(it, ex.albedo, ex.height, .3, 3);
     const meta = { name: it.name, captured: new Date(it.date).toISOString(), location: it.coords, tint: tint || 'original', size: S, tileable: !isGrad(tint) };
     const readme = `# ${base}\n\nTexture pack from Texture Lab. ${S}×${S}px, tiles seamlessly.\n\n- ${base}-height.png: grey relief, 50% grey = flat. Use it to recolour.\n- ${base}-normal.png: normal map (OpenGL, green up) for 3D tools.\n- ${base}-colour.png: the ${tint ? 'tinted' : 'evenly lit'} colour version.\n- ${base}-source.jpg: the photo it came from.\n\n## Figma\nRectangle with your colour fill, then add an Image fill with ${base}-height.png, set to Tile, blend mode Soft light or Overlay.\n\n## CSS\n\`\`\`css\n.surface {\n  background: url("${base}-height.png") 0 0 / 256px, ${tint || '#879c66'};\n  background-blend-mode: soft-light;\n}\n\`\`\`\n`;
     const src = await (await fetch(it.url)).blob();
@@ -797,7 +824,7 @@ buildRoll();
   const H = SAMPLES[it.si][1](), A = new Uint8ClampedArray(S * S * 4);
   for (let k = 0; k < S * S; k++) { const g = 208 + (H[k] - .5) * 44; A[k * 4] = g; A[k * 4 + 1] = g - 1; A[k * 4 + 2] = g - 3; A[k * 4 + 3] = 255; }   // neutral: colour comes from the background
   const c = cache.get(it.id) || {}; cache.set(it.id, c); c.ex = { height: H, albedo: A };
-  it.url = toCanvas(relief(A, H, .24, 3)).toDataURL('image/jpeg', .9); layout(true); if (view === 'grid') buildGrid(); ensureTex();
+  it.url = toCanvas(finish(it, A, H, .24, 3)).toDataURL('image/jpeg', .9); layout(true); if (view === 'grid') buildGrid(); ensureTex();
   setTimeout(gen, 30);
 })();
 ensureTex(); showModeTag();
