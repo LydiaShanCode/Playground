@@ -175,7 +175,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 <div id="frame"><div id="app">
 
   <!-- ============ GALLERY ============ -->
-  <section class="screen" id="gallery" aria-label="Texture roll">
+  <section class="screen off" id="gallery" aria-label="Texture roll">
     <div class="logo" aria-label="textura"><span>textura</span></div>
     <button class="minicam" id="miniCam" aria-label="Open camera"></button>
     <div class="pop off low" id="pop" role="group" aria-label="Tint"></div>
@@ -206,7 +206,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
   </section>
 
   <!-- ============ CAMERA ============ -->
-  <section class="screen off" id="camera" aria-label="Camera">
+  <section class="screen" id="camera" aria-label="Camera">
     <div class="body" id="camBody"><div class="grain"></div>
       <div class="frame">
         <div class="bezel">
@@ -869,6 +869,8 @@ buildRoll();
   setTimeout(gen, 30);
 })();
 ensureTex(); showModeTag();
+// open on the camera
+$('miniCam').style.visibility = 'hidden'; buildStrip(); tick(); startCam();
 }
 </script>
 </body>
