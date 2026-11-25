@@ -51,13 +51,13 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .it:not(.center) .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,0) 60%)}
 .it .ph{position:absolute;inset:0;overflow:hidden;border-radius:inherit;background-color:#bdbdbb;background-repeat:no-repeat;background-position:0 0;background-size:332px 442px;transition:opacity .35s}
 .it.tile .ph{background-repeat:repeat;background-size:112px 112px;background-position:center}
-.it.tile.glassy .ph{background-size:256px 256px}
-.grid .g.tile.glassy{background-size:150px}
+.it.tile.glassy .ph{background-size:200px 200px}
+.grid .g.tile.glassy{background-size:118px}
 .it.card .ph{box-shadow:0 10px 18px -6px rgba(0,0,0,.35),0 2px 3px rgba(0,0,0,.2)}
 .it .obj{position:absolute;inset:0;opacity:0;transition:opacity .35s}
 .it.as-obj .ph{opacity:0}
 .it.as-obj .obj{opacity:1}
-.it.as-obj.center{filter:drop-shadow(0 18px 16px rgba(0,0,0,.15)) drop-shadow(0 5px 6px rgba(0,0,0,.25))}
+.it.as-obj.center:not(.env){filter:drop-shadow(0 18px 16px rgba(0,0,0,.15)) drop-shadow(0 5px 6px rgba(0,0,0,.25))}
 .it .obj svg{width:100%;height:100%;display:block;overflow:visible}
 .osd{position:absolute;inset:14px 16px;font:19px/1 VT323,ui-monospace,monospace;color:rgba(255,255,255,.82);text-shadow:0 0 6px rgba(0,0,0,.35);pointer-events:none;opacity:0;transition:opacity .3s .1s}
 .it.center:not(.as-obj) .osd{opacity:1}
@@ -371,13 +371,13 @@ function surface(fn, amp) {     // build a height field, then normalise it to a 
   return H;
 }
 const SAMPLES = [
-  ['frosted-glass.png', () => surface((u, v) => {            // hammered glass: small warped domes + fine crinkle
-    const w1 = pfbm(u, v, 6, 3, 1) - .5, w2 = pfbm(u, v, 6, 3, 2) - .5, wu = mod(u + .035 * w1, 1), wv = mod(v + .035 * w2, 1);
-    const dome = 1 - Math.min(1, pvor(wu, wv, 30, 5) * 1.2) ** 2, crinkle = 1 - Math.abs(2 * pfbm(wu, wv, 34, 2, 3) - 1);
-    return dome * .62 + crinkle * .38; }, 1.1), 'glass'],
   ['canvas-weave.png', () => surface((u, v, x, y) => {       // fine linen: over/under threads, slubs, fibre noise
     const n = 192, a = u * n, b = v * n, ov = (Math.floor(a) + Math.floor(b)) & 1, th = Math.sin(Math.PI * (b % 1)), tv = Math.sin(Math.PI * (a % 1));
     return (ov ? th * (.75 + .25 * tv) : tv * (.75 + .25 * th)) * (.85 + .3 * pfbm(u, v, 16, 2, 6)) + .12 * (hash2(x, y, 7) - .5); }, .8)],
+  ['frosted-glass.png', () => surface((u, v) => {            // hammered glass: small warped domes + fine crinkle
+    const w1 = pfbm(u, v, 6, 3, 1) - .5, w2 = pfbm(u, v, 6, 3, 2) - .5, wu = mod(u + .035 * w1, 1), wv = mod(v + .035 * w2, 1);
+    const dome = 1 - Math.min(1, pvor(wu, wv, 40, 5) * 1.2) ** 2, crinkle = 1 - Math.abs(2 * pfbm(wu, wv, 46, 2, 3) - 1);
+    return dome * .62 + crinkle * .38; }, 1.1), 'glass'],
   ['cold-press.png', () => surface((u, v) => {               // watercolour paper: soft rounded tooth
     const t = pfbm(u, v, 26, 4, 11), t2 = pfbm(u, v, 80, 2, 12); return t * .65 + t2 * .35 - Math.pow(Math.abs(t - .5), 1.5) * .3; }, .75)],
   ['granite-speck.png', () => surface((u, v, x, y) => {      // salt-and-pepper grain in 2px clusters, with a few bright flecks
@@ -475,7 +475,7 @@ function gradPixels(key) {
 const isGrad = t => !!t && t.startsWith('g:');
 const baseFor = t => isGrad(t) ? gradPixels(t.slice(2)) : solid(t);
 const swatchUrl = key => toCanvas(gradPixels(key)).toDataURL('image/jpeg', .8);
-const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v3';
+const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v4';
 let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } catch {}
 const now = Date.now();
 let items = SAMPLES.map(([name, , kind], i) => ({ id: 'n' + i, kind: kind || 'relief', name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
@@ -513,28 +513,50 @@ async function ensureTex() {
 
 /* ================= drawn objects ================= */
 function envelopeSVG(id, href, tiled) {
-  const fill = tiled ? `<pattern id="p${id}" patternUnits="userSpaceOnUse" width="120" height="120"><image href="${href}" width="120" height="120"/></pattern>` : '';
-  const tex = href ? (tiled ? `fill="url(#p${id})"` : '') : '';
-  const img = (clip) => href ? (tiled ? `<rect x="0" y="0" width="350" height="310" ${tex} clip-path="url(#${clip}${id})" style="mix-blend-mode:multiply" opacity=".78"/>`
-    : `<image href="${href}" x="-20" y="-30" width="390" height="370" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip}${id})" style="mix-blend-mode:multiply" opacity=".6"/>`) : '';
+  // geometry (viewBox 350×310): body 8..342 × 16..288, seams meet near the centre, top flap folds down to ~y140
+  const body = 'M13 16H337Q342 16 342 21V283Q342 288 337 288H13Q8 288 8 283V21Q8 16 13 16Z';
+  const bottom = 'M8 286L158 176Q175 165 192 176L342 286Q342 288 337 288H13Q8 288 8 286Z';
+  const flap = 'M8 21Q8 17 13 17H337Q342 17 342 21L342 30Q262 136 186 147Q175 149 164 147Q88 136 8 30Z';
+  const fill = tiled ? `<pattern id="p${id}" patternUnits="userSpaceOnUse" width="110" height="110"><image href="${href}" width="110" height="110"/></pattern>` : '';
+  const tex = clip => href ? (tiled ? `<rect width="350" height="310" fill="url(#p${id})" clip-path="url(#${clip}${id})" style="mix-blend-mode:multiply" opacity=".85"/>`
+    : `<image href="${href}" x="-20" y="-30" width="390" height="370" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clip}${id})" style="mix-blend-mode:multiply" opacity=".9"/>`) : '';
   return `<svg viewBox="0 0 350 310" aria-hidden="true"><defs>${fill}
-    <linearGradient id="eb${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1efeb"/><stop offset="1" stop-color="#dedbd5"/></linearGradient>
-    <linearGradient id="ef${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f4f0"/><stop offset=".85" stop-color="#e7e4de"/><stop offset="1" stop-color="#d9d5ce"/></linearGradient>
-    <radialGradient id="ws${id}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#4a4a4a"/><stop offset=".55" stop-color="#1c1c1c"/><stop offset="1" stop-color="#080808"/></radialGradient>
-    <clipPath id="cb${id}"><rect x="8" y="16" width="334" height="272" rx="5"/></clipPath>
-    <clipPath id="cf${id}"><path d="M8 21Q8 16 13 16H337Q342 16 342 21V136Q175 148 8 136Z"/></clipPath>
-    <filter id="sh${id}" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-opacity=".22"/></filter></defs>
-    <rect x="8" y="16" width="334" height="272" rx="5" fill="url(#eb${id})"/>
-    <path d="M8 286L160 168Q175 158 190 168L342 286" fill="none" stroke="rgba(0,0,0,.07)" stroke-width="1.2"/>
-    ${img('cb')}
-    <g filter="url(#sh${id})"><path d="M8 21Q8 16 13 16H337Q342 16 342 21V136Q175 148 8 136Z" fill="url(#ef${id})"/></g>
-    ${img('cf')}
-    <path d="M9 135.5Q175 147.5 341 135.5" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
-    <g transform="translate(175 141)">
-      <path d="M0-27C9-27 13-24 19-20 26-15 27-8 27 0 28 9 24 16 18 21 12 26 6 27 0 27-8 28-15 25-20 19-26 13-28 6-27-1-27-9-24-15-18-20-12-25-7-27 0-27Z" fill="url(#ws${id})"/>
-      <circle r="17.5" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/><circle r="14" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="1"/>
-      <text y="6" text-anchor="middle" font-family="Newsreader,Georgia,serif" font-size="18" font-style="italic" fill="rgba(255,255,255,.28)">t</text>
-      <ellipse cx="-8" cy="-11" rx="7" ry="3.5" fill="rgba(255,255,255,.12)" transform="rotate(-30 -8 -11)"/></g></svg>`;
+    <clipPath id="cb${id}"><path d="${body}"/></clipPath><clipPath id="cf${id}"><path d="${flap}"/></clipPath>
+    <filter id="grain${id}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".55"/></feComponentTransfer></filter>
+    <filter id="soft${id}" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="3.2"/></filter>
+    <filter id="tight${id}" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="1.2"/></filter>
+    <linearGradient id="lit${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>
+    <radialGradient id="pillow${id}" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="flapLit${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".12" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#000" stop-opacity=".05"/></linearGradient>
+    <radialGradient id="wax${id}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#5a5650"/><stop offset=".45" stop-color="#262421"/><stop offset="1" stop-color="#0c0b0a"/></radialGradient>
+    <radialGradient id="waxIn${id}" cx=".6" cy=".66" r=".7"><stop offset="0" stop-color="#3a3733"/><stop offset="1" stop-color="#121110"/></radialGradient></defs>
+    <!-- contact shadow -->
+    <path d="${body}" transform="translate(1 5)" fill="#000" opacity=".22" filter="url(#soft${id})"/>
+    <!-- paper body with side flaps -->
+    <path d="${body}" fill="#efede8"/>${tex('cb')}
+    <path d="M8 286L160 176M342 286L190 176" stroke="rgba(0,0,0,.07)" stroke-width="1"/>
+    <!-- bottom flap overlaps the sides: thin shadow along its upper edges -->
+    <path d="M10 284L158 178Q175 167 192 178L340 284" fill="none" stroke="#000" stroke-width="3" opacity=".16" filter="url(#tight${id})" clip-path="url(#cb${id})"/>
+    <path d="${bottom}" fill="#f3f1ec" opacity=".55"/>
+    <path d="M9 285L158 177Q175 166 192 177L341 285" fill="none" stroke="#fff" stroke-width=".9" opacity=".8"/>
+    <!-- soft light across the sheet + a slight pillow where the letter is -->
+    <path d="${body}" fill="url(#pillow${id})"/><path d="${body}" fill="url(#lit${id})"/>
+    <!-- top flap: casts a soft shadow onto the body, crease highlight along the fold -->
+    <path d="${flap}" transform="translate(0 4)" fill="#000" opacity=".2" filter="url(#soft${id})" clip-path="url(#cb${id})"/>
+    <path d="${flap}" fill="#f4f2ee"/>${tex('cf')}
+    <path d="${flap}" fill="url(#flapLit${id})"/>
+    <path d="M10 18.5H340" stroke="#fff" stroke-width="1.4" opacity=".9"/><path d="M10 21.5H340" stroke="#000" stroke-width=".8" opacity=".08"/>
+    <path d="M8.6 30.5Q88 136.5 164 147.5Q175 149.5 186 147.5Q262 136.5 341.4 30.5" fill="none" stroke="#fff" stroke-width=".9" opacity=".85"/>
+    <!-- paper grain over everything -->
+    <rect width="350" height="310" filter="url(#grain${id})" clip-path="url(#cb${id})" opacity=".14" style="mix-blend-mode:multiply"/>
+    <!-- pressed wax seal -->
+    <g transform="translate(175 147)">
+      <path d="M1-30C11-30 17-26 23-21 30-15 31-6 30 2 31 11 26 19 19 24 12 29 5 31-3 30-12 31-19 26-24 20-29 14-31 5-30-3-30-12-26-19-19-25-13-29-7-30 1-30Z" transform="translate(1.5 3)" fill="#000" opacity=".35" filter="url(#tight${id})"/>
+      <path d="M1-30C11-30 17-26 23-21 30-15 31-6 30 2 31 11 26 19 19 24 12 29 5 31-3 30-12 31-19 26-24 20-29 14-31 5-30-3-30-12-26-19-19-25-13-29-7-30 1-30Z" fill="url(#wax${id})"/>
+      <circle r="19" fill="url(#waxIn${id})"/><circle r="19" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="1.2"/><circle r="20.5" fill="none" stroke="rgba(0,0,0,.55)" stroke-width="1.4"/>
+      <text y="6.5" text-anchor="middle" font-family="'Sorts Mill Goudy',Georgia,serif" font-size="19" font-style="italic" fill="rgba(255,255,255,.2)">t</text>
+      <path d="M-19-14Q-12-24 1-25" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M14 20Q20 15 22 8" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5" stroke-linecap="round"/></g></svg>`;
 }
 function folderSVG(id, href, tiled) {
   const fill = tiled ? `<pattern id="p${id}" patternUnits="userSpaceOnUse" width="120" height="120"><image href="${href}" width="120" height="120"/></pattern>` : '';
@@ -585,7 +607,7 @@ function layout(force) {
     el.style.zIndex = String(50 - a); el.style.opacity = a > 2 ? 0 : 1;
     el.style.borderRadius = mode === 'image' ? '18px' : '0';
     const asObj = mode !== 'image' && a < 3;
-    el.classList.toggle('as-obj', asObj); el.classList.toggle('center', d === 0); el.classList.toggle('card', mode === 'image' && d === 0);
+    el.classList.toggle('as-obj', asObj); el.classList.toggle('env', mode === 'envelope'); el.classList.toggle('center', d === 0); el.classList.toggle('card', mode === 'image' && d === 0);
     el.style.visibility = a > 5 ? 'hidden' : '';
     paintItem(el, it, asObj, force);
   }
