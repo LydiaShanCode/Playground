@@ -1,1 +1,15 @@
 # Playground
+
+Static experiments, no build step.
+
+- `texture-lab/` — Texture Lab: photo → tileable height/normal/colour maps, previews, texture-pack export.
+- `texture-gallery/` — Skins gallery: folder and envelope UI with configurable skins.
+
+## Run locally
+
+Open any `index.html` in a browser, or serve the folder: `npx serve .`
+
+## Deploy (Vercel)
+
+`vercel.json` deploys the repo root as a static site (no build). Import the repo at
+vercel.com/new, or from a machine logged in to Vercel run `npx vercel --prod`.
