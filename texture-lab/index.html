@@ -23,7 +23,7 @@ body{background:#c3c3c1;color:var(--ink);font:14px/1.4 Geist,ui-sans-serif,syste
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
 button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 #frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
-#app{position:absolute;left:0;top:0;width:402px;height:891px;transform-origin:0 0;background:var(--fog);border-radius:32px;overflow:hidden;box-shadow:0 30px 80px -30px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.04)}
+#app{position:absolute;left:0;top:0;width:402px;height:891px;transform-origin:0 0;background:var(--fog);border-radius:32px;overflow:hidden;overflow:clip;box-shadow:0 30px 80px -30px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.04)}
 .phone #app{border-radius:0;box-shadow:none}
 .phone body,body.phone{background:var(--fog)}
 .screen{position:absolute;inset:0;transition:opacity .3s,transform .4s cubic-bezier(.2,.8,.2,1)}
@@ -40,6 +40,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .pop{position:absolute;left:18px;top:70px;z-index:20;background:rgba(245,245,245,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px;padding:10px;display:grid;grid-template-columns:repeat(5,36px);gap:8px;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);transform-origin:20px 0;transition:opacity .2s,transform .2s}
 .pop.off{opacity:0;transform:scale(.9);pointer-events:none}
 .pop button{width:36px;height:36px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pop .grad{background-size:cover;background-position:center}
 .pop button[aria-pressed=true]{outline:2px solid #111;outline-offset:2px}
 .pop .orig{background:conic-gradient(#d8c9b5 0 25%,#7a8f63 0 50%,#c98a6a 0 75%,#8aa3b8 0)}
 .pop p{grid-column:1/-1;margin:2px 2px 0;font-size:11.5px;color:var(--muted)}
@@ -430,6 +431,39 @@ const toast = (m, act, fn) => { const t = $('toast'); t.textContent = m; t.class
   if (act) { const b = document.createElement('button'); b.textContent = act; b.onclick = () => { t.classList.remove('show'); fn(); }; t.append(b); }
   t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), act ? 5000 : 2600); };
 const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'];
+/* ---------- aura / mesh gradients: soft lumpy blobs, heavily blurred, with film grain ---------- */
+// each blob: [colour, x, y, radius, wobble seed]; positions/radii are fractions of the square
+const GRADS = {
+  ember: { name: 'Ember', base: '#d8cfe0', blobs: [['#e9dcc8', .55, .5, .42, 1], ['#c7a3f2', .15, .82, .3, 2], ['#c9a6f0', .9, .3, .26, 3], ['#ef6a28', .4, .26, .3, 4], ['#ef6a28', .06, .55, .2, 5], ['#f07a2e', .86, .66, .17, 6], ['#f1b48a', .62, .44, .14, 7]] },
+  tide: { name: 'Tide', base: '#f5f7fc', blobs: [['#4d7fd2', .45, .14, .34, 1], ['#5a86d6', .66, .62, .34, 2], ['#8e8ee6', .4, .72, .26, 3], ['#e19ad4', .3, .34, .17, 4], ['#e3a6d6', .6, .86, .17, 5], ['#f6f2fa', .95, .4, .2, 6]] },
+  butter: { name: 'Butter', base: '#fdf9ea', blobs: [['#f9eab0', .5, .55, .55, 1], ['#f5dc72', .48, .55, .28, 2]] },
+  peach: { name: 'Peach', base: '#fbefe8', blobs: [['#f4a08a', .3, .3, .3, 1], ['#f7c7a3', .72, .6, .34, 2], ['#e6b2dd', .25, .82, .26, 3], ['#fbd9c4', .8, .15, .2, 4]] },
+  mint: { name: 'Mint', base: '#eff7f1', blobs: [['#9dd8bf', .35, .35, .34, 1], ['#c9e6a0', .72, .72, .3, 2], ['#a9c9f1', .8, .25, .22, 3], ['#e6f2d6', .3, .85, .22, 4]] },
+};
+const gradCache = {};
+function gradPixels(key) {
+  if (gradCache[key]) return gradCache[key];
+  const G = GRADS[key], n = 128, c = document.createElement('canvas'); c.width = c.height = n; const g = c.getContext('2d');
+  g.fillStyle = G.base; g.fillRect(0, 0, n, n);
+  for (const [col, bx, by, br, sd] of G.blobs) {            // organic outline: radius wobbles with angle
+    g.fillStyle = col; g.beginPath();
+    for (let k = 0; k <= 64; k++) { const a = k / 64 * Math.PI * 2, r = br * n * (1 + .22 * Math.sin(3 * a + sd) + .12 * Math.sin(5 * a + sd * 2) + .06 * Math.sin(7 * a + sd * 3));
+      const x = bx * n + Math.cos(a) * r, y = by * n + Math.sin(a) * r * 1.15; k ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.fill();
+  }
+  const d = g.getImageData(0, 0, n, n).data, ch = [0, 1, 2].map(o => { const a = new Float32Array(n * n); for (let i = 0; i < n * n; i++) a[i] = d[i * 4 + o]; return blur(a, n, n, 9, 3); });
+  const sm = document.createElement('canvas'); sm.width = sm.height = n; const sg = sm.getContext('2d'), si = sg.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) { si.data[i * 4] = ch[0][i]; si.data[i * 4 + 1] = ch[1][i]; si.data[i * 4 + 2] = ch[2][i]; si.data[i * 4 + 3] = 255; }
+  sg.putImageData(si, 0, 0);
+  const big = document.createElement('canvas'); big.width = big.height = S; const bg = big.getContext('2d', { willReadFrequently: true });
+  bg.imageSmoothingQuality = 'high'; bg.drawImage(sm, 0, 0, S, S);
+  const px = bg.getImageData(0, 0, S, S).data;
+  for (let i = 0; i < S * S; i++) { const gr = (hash2(i % S, (i / S) | 0, 77) - .5) * 26; px[i * 4] += gr; px[i * 4 + 1] += gr; px[i * 4 + 2] += gr; }   // film grain
+  return gradCache[key] = new Uint8ClampedArray(px);
+}
+const isGrad = t => !!t && t.startsWith('g:');
+const baseFor = t => isGrad(t) ? gradPixels(t.slice(2)) : solid(t);
+const swatchUrl = key => toCanvas(gradPixels(key)).toDataURL('image/jpeg', .8);
 const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v2';
 let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } catch {}
 const now = Date.now();
@@ -454,11 +488,11 @@ async function extracted(it) {
 }
 async function texUrl(it, hex) {
   const c = cache.get(it.id) || {}; cache.set(it.id, c); c.tex = c.tex || {}; const k = hex || 'orig';
-  if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? relief(solid(hex), ex.height, .55, 5) : relief(ex.albedo, ex.height, .35, 4)).toDataURL('image/jpeg', .9); }
+  if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? relief(baseFor(hex), ex.height, isGrad(hex) ? .3 : .55, isGrad(hex) ? 4 : 5) : relief(ex.albedo, ex.height, .35, 4)).toDataURL('image/jpeg', .9); }
   return c.tex[k];
 }
 // what to draw for an item: its tileable texture once ready, else the photo (or nothing yet)
-const texOf = it => { const u = cache.get(it.id)?.tex?.[tint || 'orig']; return u ? { url: u, tiled: true } : { url: tint ? null : it.url, tiled: false }; };
+const texOf = it => { const u = cache.get(it.id)?.tex?.[tint || 'orig']; return u ? { url: u, tiled: !isGrad(tint) } : { url: tint ? null : it.url, tiled: false }; };
 let texJob = 0;
 async function ensureTex() {
   const job = ++texJob, order = [idx, idx + 1, idx - 1, idx + 2, idx - 2, ...items.keys()].filter((v, k, a) => v >= 0 && v < items.length && a.indexOf(v) === k);
@@ -578,13 +612,15 @@ const MODES = ['image', 'folder', 'envelope'], MODE_NAME = { image: 'image', fol
 function cycleMode() { mode = MODES[(MODES.indexOf(mode) + 1) % 3]; layout(true); showModeTag(); }
 function showModeTag() { const next = MODES[(MODES.indexOf(mode) + 1) % 3]; $('modetag').textContent = `Showing as ${MODE_NAME[mode]} · tap for ${MODE_NAME[next]}`; }
 const pop = $('pop');
-pop.innerHTML = TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('') + '<p>Recolour the extracted texture</p>';
+pop.innerHTML = TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('')
+  + Object.entries(GRADS).map(([k, g]) => `<button data-t="g:${k}" class="grad" style="background-image:url(${swatchUrl(k)})" aria-label="${g.name} gradient" aria-pressed="false"></button>`).join('')
+  + '<p>Solid colours, then mesh gradients</p>';
 const closePop = () => { pop.classList.add('off'); $('navColour').setAttribute('aria-expanded', 'false'); };
 $('navColour').addEventListener('click', e => { e.stopPropagation(); const wasOpen = !pop.classList.contains('off') && pop.classList.contains('low'); closePop(); if (wasOpen) return; pop.classList.add('low'); pop.classList.remove('off'); $('navColour').setAttribute('aria-expanded', 'true'); });
 document.addEventListener('click', e => { if (!pop.contains(e.target) && !$('navColour').contains(e.target)) closePop(); });
 pop.addEventListener('click', async e => { const b = e.target.closest('button'); if (!b) return; tint = b.dataset.t || null;
   for (const x of pop.querySelectorAll('button')) x.setAttribute('aria-pressed', x === b);
-  $('navSw').style.background = tint || ''; closePop(); layout(true); if (view === 'grid') buildGrid(); ensureTex(); });
+  $('navSw').style.background = isGrad(tint) ? `center/cover url(${swatchUrl(tint.slice(2))})` : (tint || ''); closePop(); layout(true); if (view === 'grid') buildGrid(); ensureTex(); });
 function buildGrid() {
   $('grid').innerHTML = items.map((it, i) => { const { url: u, tiled } = texOf(it); return `<button data-i="${i}" aria-label="${esc(it.name)}"><div class="g${tiled ? ' tile' : ''}${u ? '' : ' shimmer'}" style="${u ? `background-image:url(${u})` : ''}"></div><div class="n">${esc(it.name)}</div><div class="d">${esc(fmtDate(it.date))}</div></button>`; }).join('');
 }
@@ -742,8 +778,8 @@ $('dl').addEventListener('click', async () => {
   const it = items[idx], btn = $('dl'); if (!it?.url || btn.classList.contains('busy')) return;
   btn.classList.add('busy');
   try {
-    const ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? relief(solid(tint), ex.height, .55, 5) : relief(ex.albedo, ex.height, .45, 5);
-    const meta = { name: it.name, captured: new Date(it.date).toISOString(), location: it.coords, tint: tint || 'original', size: S, tileable: true };
+    const ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? relief(baseFor(tint), ex.height, isGrad(tint) ? .3 : .55, isGrad(tint) ? 4 : 5) : relief(ex.albedo, ex.height, .45, 5);
+    const meta = { name: it.name, captured: new Date(it.date).toISOString(), location: it.coords, tint: tint || 'original', size: S, tileable: !isGrad(tint) };
     const readme = `# ${base}\n\nTexture pack from Texture Lab. ${S}×${S}px, tiles seamlessly.\n\n- ${base}-height.png: grey relief, 50% grey = flat. Use it to recolour.\n- ${base}-normal.png: normal map (OpenGL, green up) for 3D tools.\n- ${base}-colour.png: the ${tint ? 'tinted' : 'evenly lit'} colour version.\n- ${base}-source.jpg: the photo it came from.\n\n## Figma\nRectangle with your colour fill, then add an Image fill with ${base}-height.png, set to Tile, blend mode Soft light or Overlay.\n\n## CSS\n\`\`\`css\n.surface {\n  background: url("${base}-height.png") 0 0 / 256px, ${tint || '#879c66'};\n  background-blend-mode: soft-light;\n}\n\`\`\`\n`;
     const src = await (await fetch(it.url)).blob();
     const files = [
