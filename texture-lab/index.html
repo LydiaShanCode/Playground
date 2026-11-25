@@ -112,20 +112,19 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
   background:conic-gradient(from 20deg,#e9e9e6,#a9a8a3,#f4f4f1,#9c9b96,#e4e3df,#a5a4a0,#f1f1ee,#9fa09b,#e9e9e6);
   box-shadow:0 3px 6px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.5),0 0 0 6px #9b958b,0 0 0 7px rgba(255,255,255,.25)}
 .dial::before{content:"";position:absolute;inset:8px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.05) 0 2deg,transparent 2deg 4deg)}
-.dial .mk{position:absolute;font:600 9px/1 Geist,sans-serif;color:#55524c;letter-spacing:.06em}
+.dial .mk{position:absolute}
+.dial .tri{width:0;height:0;border-left:4.5px solid transparent;border-right:4.5px solid transparent;border-bottom:7px solid #55524c;filter:drop-shadow(0 1px 0 rgba(255,255,255,.6))}
 .shutter{position:absolute;left:41px;top:41px;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#fafaf8,#c9c8c3 60%,#a9a8a2);box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 -2px 3px rgba(0,0,0,.15),inset 0 2px 2px rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font:600 9px/1 Geist,sans-serif;color:#6a675f;letter-spacing:.08em;transition:transform .08s}
 .shutter:active,.shutter.press{transform:scale(.93);box-shadow:0 1px 1px rgba(0,0,0,.4),inset 0 2px 4px rgba(0,0,0,.25)}
 .knob{position:absolute;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 45% 35%,#e8e7e3,#a7a59f 70%,#8f8d87);box-shadow:0 2px 4px rgba(0,0,0,.35),inset 0 2px 2px rgba(255,255,255,.8),0 0 0 4px #9d978d,0 0 0 5px rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;transition:transform .08s}
 .knob:active{transform:scale(.93)}
 .knob svg{width:18px;height:18px;fill:none;stroke:#4c4943;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .engr{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.12em;color:#6f6a61;text-shadow:0 1px 0 rgba(255,255,255,.35)}
-.strip{position:absolute;left:50%;transform:translateX(-50%);top:808px;height:63px;display:flex;gap:13px;align-items:center;border-radius:20px;overflow:hidden;max-width:352px}
-.strip>*{flex:none;height:63px}
-.strip .w{width:4px;background:#fff}
-.strip .g1{width:12px;background:#a0a0a0}
-.strip .g2{width:19px;background:#a0a0a0}
-.strip button{width:48px;height:63px;background-size:cover;background-position:center;background-color:#bdbdbb;opacity:.3;transition:opacity .2s}
-.strip button.cur{opacity:1}
+.strip{position:absolute;left:0;right:0;top:806px;height:67px;display:flex;align-items:center;gap:4px;padding:0 177px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:200px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent)}
+.strip::-webkit-scrollbar{display:none}
+.strip button{flex:none;width:48px;height:63px;border-radius:3px;background-size:cover;background-position:center;background-color:#bdbdbb;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;box-shadow:0 2px 4px rgba(0,0,0,.18)}
+.strip button.cur{box-shadow:0 0 0 2px #fff,0 3px 8px rgba(0,0,0,.25)}
+.strip .none{flex:none;font-size:12px;color:var(--muted);white-space:nowrap;margin:0 -60px}
 .back{position:absolute;left:18px;top:828px;height:28px;padding:0 10px 0 6px;border-radius:999px;display:flex;align-items:center;gap:2px;font-size:12px;color:#555;background:var(--glass)}
 .back svg{width:16px;height:16px;fill:none;stroke:#555;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
@@ -202,8 +201,8 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
       <span class="engr" style="left:302px;top:500px">FLIP</span>
       <button class="knob" id="flipBtn" style="left:295px;top:520px" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2"/><path d="M20 4v4h-4M4 20v-4h4"/></svg></button>
       <div class="dial" aria-hidden="false">
-        <span class="mk" style="left:58px;top:12px">▲</span><span class="mk" style="left:58px;bottom:12px">▼</span>
-        <span class="mk" style="left:13px;top:63px">◀</span><span class="mk" style="right:13px;top:63px">▶</span>
+        <span class="mk tri" style="left:64px;top:13px;transform:rotate(0deg)"></span><span class="mk tri" style="left:64px;bottom:13px;transform:rotate(180deg)"></span>
+        <span class="mk tri" style="left:14px;top:64px;transform:rotate(-90deg)"></span><span class="mk tri" style="right:14px;top:64px;transform:rotate(90deg)"></span>
         <button class="shutter" id="shutter" aria-label="Take photo">SNAP</button>
       </div>
       <span class="engr" style="left:56px;top:640px">ROLL</span>
@@ -545,12 +544,36 @@ $('file').addEventListener('change', async e => {
     it.name = (file.name.replace(/\.[^.]+$/, '').slice(0, 24) || 'photo') + '.png'; persist(); buildRoll(); showScreen('gallery'); }
   catch { toast('Couldn’t read that image.'); }
 });
+const strip = $('strip');
 function buildStrip() {
-  const n = items.length, at = i => items[i] ? `<button data-i="${i}" class="${i === idx ? 'cur' : ''}" style="${items[i].url ? `background-image:url(${items[i].url})` : ''}" aria-label="${esc(items[i].name)}"></button>` : '<span class="g2"></span>';
-  $('strip').innerHTML = `<span class="w"></span><span class="w"></span><span class="g1"></span><span class="g2"></span>${at(idx - 1)}${at(idx)}${at(idx + 1)}<span class="g2"></span><span class="g1"></span><span class="w"></span><span class="w"></span>`;
-  const cur = items[idx]; $('still').style.backgroundImage = cur?.url ? `url(${cur.url})` : '';
+  strip.innerHTML = items.length ? items.map((it, i) => `<button data-i="${i}" class="${i === idx ? 'cur' : ''}" style="${it.url ? `background-image:url(${it.url})` : ''}" aria-label="${esc(it.name)}"></button>`).join('')
+    : '<span class="none">Your captures will line up here</span>';
+  const b = strip.children[idx]; if (b && b.dataset.i) strip.scrollLeft = b.offsetLeft + 24 - strip.clientWidth / 2;
+  slant(); setStill();
 }
-$('strip').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; idx = +b.dataset.i; showScreen('gallery'); });
+function setStill() { const cur = items[idx]; $('still').style.backgroundImage = cur?.url ? `url(${cur.url})` : ''; }
+// cover-flow: the centred frame faces you, frames to the sides turn away and crowd in
+function slant() {
+  const mid = strip.scrollLeft + strip.clientWidth / 2; let best = -1, bd = 1e9;
+  for (const b of strip.querySelectorAll('button')) {
+    const d = (b.offsetLeft + 24 - mid) / 52, a = Math.abs(d), sgn = Math.sign(d);
+    const turn = Math.min(a, 1) * 66, pull = Math.max(0, a - .35) * 24, depth = Math.min(a, 1.5) * 18;
+    b.style.transform = `translateX(${-sgn * pull}px) translateZ(${-depth}px) rotateY(${-sgn * turn}deg)`;
+    b.style.opacity = a < .5 ? 1 : Math.max(.35, 1 - a * .16); b.style.zIndex = String(100 - Math.round(a * 10));
+    if (a < bd) { bd = a; best = +b.dataset.i; }
+  }
+  return best;
+}
+let stripRaf = 0, stripEnd = 0;
+strip.addEventListener('scroll', () => {
+  if (!stripRaf) stripRaf = requestAnimationFrame(() => { stripRaf = 0; slant(); });
+  clearTimeout(stripEnd); stripEnd = setTimeout(() => { const c = slant(); if (c >= 0 && c !== idx) { idx = c; for (const b of strip.children) b.classList.toggle('cur', +b.dataset.i === idx); setStill(); } }, 110);
+}, { passive: true });
+strip.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; const i = +b.dataset.i;
+  if (i === idx) { showScreen('gallery'); return; }
+  strip.scrollTo({ left: b.offsetLeft + 24 - strip.clientWidth / 2, behavior: 'smooth' });
+});
 
 /* ================= delete with undo ================= */
 $('del').addEventListener('click', () => {
