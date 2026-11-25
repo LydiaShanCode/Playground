@@ -94,10 +94,14 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
   background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,rgba(0,0,0,.025) 1px 2px,transparent 2px 4px),
     linear-gradient(180deg,#e4e4e1 0,#cacac6 22%,#d9d9d6 48%,#bdbdb9 78%,#a9a9a5 100%);
   box-shadow:0 6px 10px 4px rgba(0,0,0,.14),0 2px 3px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.95),inset 2px 0 0 rgba(255,255,255,.5),inset -2px 0 2px rgba(0,0,0,.12),inset 0 -4px 8px rgba(0,0,0,.18)}
-.body::before{content:"";position:absolute;inset:0;background:var(--grain);opacity:.16;mix-blend-mode:multiply;pointer-events:none}
+.body::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2.5px;z-index:3;background:linear-gradient(145deg,#fff 0%,rgba(255,255,255,.95) 10%,rgba(255,255,255,.2) 32%,rgba(255,255,255,0) 50%,rgba(0,0,0,.08) 68%,rgba(0,0,0,.4) 92%,rgba(0,0,0,.55) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none}
+.body::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:14px;z-index:2;background:linear-gradient(145deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.25) 20%,rgba(255,255,255,0) 42%,rgba(0,0,0,0) 60%,rgba(0,0,0,.12) 82%,rgba(0,0,0,.26) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;filter:blur(1px)}
+.body .grain{position:absolute;inset:0;background:var(--grain);opacity:.16;mix-blend-mode:multiply;pointer-events:none}
 .frame{position:absolute;left:16px;top:16px;width:365px;height:488px;border-radius:20px;
-  background:linear-gradient(170deg,#f1f1ef 0,#d3d3cf 40%,#e3e3e0 62%,#b9b9b5 100%);
-  box-shadow:0 2px 3px rgba(0,0,0,.25),0 6px 10px rgba(0,0,0,.08),inset 0 1.5px 0 #fff,inset 0 -2px 3px rgba(0,0,0,.14)}
+  background:linear-gradient(170deg,#f1f1ef 0,#d3d3cf 40%,#e3e3e0 62%,#bdbdb9 100%);
+  box-shadow:0 1px 0 rgba(0,0,0,.18),0 3px 4px rgba(0,0,0,.22),0 8px 14px rgba(0,0,0,.1)}
+.frame::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;background:linear-gradient(150deg,#fff 0%,#fff 14%,rgba(255,255,255,.1) 40%,rgba(0,0,0,.05) 60%,rgba(0,0,0,.35) 90%,rgba(0,0,0,.45) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none}
+.frame::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:9px;background:linear-gradient(150deg,rgba(255,255,255,.7) 0%,rgba(255,255,255,0) 35%,rgba(0,0,0,0) 62%,rgba(0,0,0,.14) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none}
 .bezel{position:absolute;left:14px;top:14px;width:337px;height:420px;border-radius:7px;background:#0d0d0d;box-shadow:inset 0 0 0 2px #2a2a2a,0 0 0 2px #9d9d99,0 0 0 3px rgba(255,255,255,.8)}
 .lcd{position:absolute;left:8px;top:8px;right:8px;bottom:8px;border-radius:3px;overflow:hidden;background:#121412}
 .lcd video,.lcd .still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background-size:cover;background-position:center}
@@ -120,25 +124,27 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .prt{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.12em;color:#2f62b0}
 .prt.red{color:#c43a2f}
 .prt svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
-.key{position:absolute;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 45% 32%,#ffffff 0,#dcdcd8 42%,#b0b0ab 78%,#959590 100%);
-  box-shadow:0 0 0 4px #bdbdb9,0 0 0 5px rgba(0,0,0,.18),0 0 0 6px rgba(255,255,255,.55),0 2px 3px rgba(0,0,0,.35),inset 0 2px 2px #fff,inset 0 -2px 3px rgba(0,0,0,.16);transition:transform .07s,box-shadow .07s}
+.key{position:absolute;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:translateY(-4px);
+  background:radial-gradient(circle at 38% 28%,#ffffff 0,#f0f0ee 22%,#cfcfcb 58%,#a9a9a4 92%,#9a9a95 100%);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.14),inset 0 2px 1px #fff,inset 0 -3px 4px rgba(0,0,0,.18),0 1px 0 #a7a7a2,0 2px 0 #9e9e99,0 3px 0 #969691,0 4px 0 #8e8e89,0 5px 0 #868681,0 6px 1px #7b7b76,0 9px 8px rgba(0,0,0,.3),0 14px 18px rgba(0,0,0,.12);transition:transform .07s,box-shadow .07s}
 .key::before{content:"";position:absolute;inset:5px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.035) 0 3deg,rgba(255,255,255,.06) 3deg 6deg);pointer-events:none}
-.key:active,.key.press{transform:scale(.95);box-shadow:0 0 0 4px #bdbdb9,0 0 0 5px rgba(0,0,0,.18),0 0 0 6px rgba(255,255,255,.55),0 1px 1px rgba(0,0,0,.35),inset 0 2px 4px rgba(0,0,0,.24)}
+.key:active,.key.press{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.14),inset 0 2px 3px rgba(0,0,0,.12),0 1px 0 #a7a7a2,0 2px 0 #969691,0 3px 1px #7b7b76,0 4px 4px rgba(0,0,0,.3)}
 .key svg{position:relative;width:18px;height:18px;fill:none;stroke:#55554f;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.dialring{position:absolute;left:146px;top:548px;width:156px;height:156px;border-radius:50%;
-  background:radial-gradient(circle,transparent 58%,rgba(0,0,0,.08) 59%,transparent 61%),conic-gradient(from 20deg,#f2f2ef,#a9a9a4,#fafaf8,#9b9b96,#ebebe8,#a6a6a1,#f6f6f3,#a0a09b,#f2f2ef);
-  box-shadow:0 0 0 5px #c3c3bf,0 0 0 6px rgba(0,0,0,.2),0 0 0 7px rgba(255,255,255,.6),0 3px 6px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.7)}
+.dialring{position:absolute;left:146px;top:544px;width:156px;height:156px;border-radius:50%;
+  background:radial-gradient(circle,transparent 58%,rgba(0,0,0,.1) 59%,rgba(255,255,255,.5) 60.5%,transparent 62%),conic-gradient(from 20deg,#f4f4f1,#a9a9a4,#fcfcfa,#9b9b96,#ededea,#a6a6a1,#f8f8f5,#a0a09b,#f4f4f1);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.15),0 1px 0 #a3a39e,0 2px 0 #999994,0 3px 0 #8f8f8a,0 4px 1px #7e7e79,0 8px 9px rgba(0,0,0,.3),0 0 0 7px #c4c4c0,0 0 0 8px rgba(0,0,0,.18),0 1px 0 9px rgba(255,255,255,.6)}
 .dialring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.055) 0 2deg,transparent 2deg 4deg)}
 .dialring .tick{position:absolute;width:5px;height:5px;border-radius:50%;background:#55554f;box-shadow:0 1px 0 rgba(255,255,255,.7)}
-.key.big{left:46px !important;top:46px !important;width:64px;height:64px;box-shadow:0 0 0 3px #c9c9c5,0 0 0 4px rgba(0,0,0,.25),0 2px 4px rgba(0,0,0,.4),inset 0 2px 2px #fff,inset 0 -2px 4px rgba(0,0,0,.2);font:600 9px/1 Geist,sans-serif;letter-spacing:.12em;color:#62625c}
-.key.big:active,.key.big.press{transform:scale(.94);box-shadow:0 0 0 3px #c9c9c5,0 0 0 4px rgba(0,0,0,.25),0 1px 1px rgba(0,0,0,.4),inset 0 2px 5px rgba(0,0,0,.28)}
+.key.big{left:44px !important;top:42px !important;width:68px;height:68px;font:600 9px/1 Geist,sans-serif;letter-spacing:.12em;color:#62625c;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.16),inset 0 2px 1px #fff,inset 0 -3px 5px rgba(0,0,0,.2),0 1px 0 #a7a7a2,0 2px 0 #9e9e99,0 3px 0 #969691,0 4px 0 #8e8e89,0 5px 0 #868681,0 6px 1px #7b7b76,0 9px 8px rgba(0,0,0,.32),0 14px 16px rgba(0,0,0,.14)}
+.key.big:active,.key.big.press{transform:translateY(-1px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.16),inset 0 2px 4px rgba(0,0,0,.16),0 1px 0 #a7a7a2,0 2px 0 #969691,0 3px 1px #7b7b76,0 4px 4px rgba(0,0,0,.3)}
 .key.big span{position:relative}
 .slide{position:absolute;left:28px;top:532px;width:106px;height:24px;border-radius:12px;background:linear-gradient(180deg,#8d8d89,#b4b4b0);box-shadow:inset 0 2px 3px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.8)}
-.slide .knob{position:absolute;left:3px;top:3px;width:52px;height:18px;border-radius:9px;transition:transform .18s cubic-bezier(.3,.7,.2,1);
-  background:repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 1px,transparent 1px 4px),linear-gradient(180deg,#fafaf8,#c4c4c0);box-shadow:0 1px 2px rgba(0,0,0,.4),inset 0 1px 0 #fff}
+.slide .knob{position:absolute;left:3px;top:1px;width:52px;height:20px;border-radius:9px;transition:transform .18s cubic-bezier(.3,.7,.2,1);
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 1px,transparent 1px 4px),linear-gradient(180deg,#ffffff,#cfcfcb 70%,#b5b5b0);box-shadow:inset 0 1px 0 #fff,0 1px 0 #9a9a95,0 2px 0 #8a8a85,0 3px 1px #77776f,0 5px 5px rgba(0,0,0,.35)}
 .slide.front .knob{transform:translateX(48px)}
-.vf{position:absolute;left:300px;top:524px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#5b5f63,#14161a 58%,#050607);box-shadow:0 0 0 5px #d6d6d3,0 0 0 6px rgba(0,0,0,.25),0 0 0 7px rgba(255,255,255,.6),inset 0 2px 4px rgba(0,0,0,.6)}
+.vf{position:absolute;left:300px;top:522px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#5b5f63,#14161a 58%,#050607);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.6),0 0 0 4px #ececea,0 0 0 5px #b2b2ad,0 0 0 7px #d9d9d6,0 1px 0 7px #fff,0 3px 0 7px #9b9b96,0 6px 8px 7px rgba(0,0,0,.25)}
 .vf::after{content:"";position:absolute;left:11px;top:9px;width:12px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);transform:rotate(-25deg)}
 .dots{position:absolute;left:322px;top:690px;width:44px;height:44px}
 .dots i{position:absolute;width:5px;height:5px;border-radius:50%;background:#3d3d3a;box-shadow:inset 0 1px 1px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.8)}
@@ -196,7 +202,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 
   <!-- ============ CAMERA ============ -->
   <section class="screen off" id="camera" aria-label="Camera">
-    <div class="body" id="camBody">
+    <div class="body" id="camBody"><div class="grain"></div>
       <div class="frame">
         <div class="bezel">
           <div class="lcd" id="lcd">
