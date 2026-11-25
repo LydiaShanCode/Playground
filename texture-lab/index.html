@@ -7,7 +7,7 @@
 <title>Texture Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Newsreader:opsz@6..72&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Instrument+Serif:ital@0;1&family=Newsreader:opsz@6..72&family=VT323&display=swap" rel="stylesheet">
 <style>
 /* VOICE everyday, tactile, quiet
    IDEA a pocket digital camera that collects surfaces; the roll becomes folders and envelopes
@@ -31,12 +31,10 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .ic{width:24px;height:24px;display:block;fill:none;stroke:#1e1e1e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* top bar */
-.top{position:absolute;left:23px;top:26px;display:flex;gap:3px;align-items:flex-end}
-.tint{width:36px;height:35px;border-radius:100px;border:2px solid var(--fog);background:rgba(135,156,102,.5);box-shadow:0 0 0 1px rgba(255,255,255,.35)}
-.seg{display:flex;gap:2.6px;padding:5.2px;border-radius:999px;background:var(--glass);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
-.seg button{display:flex;align-items:center;justify-content:center;width:31px;height:23.5px;border-radius:999px}
-.seg button[aria-pressed=true]{background:var(--chip)}
-.seg .ic{width:15px;height:15px;stroke-width:1.9}
+.logo{position:absolute;left:26px;top:27px;height:36px;display:flex;align-items:center;gap:8px;user-select:none}
+.logo i{width:10px;height:10px;border-radius:50%;background:#ee6a24;box-shadow:inset 0 -1px 1px rgba(0,0,0,.2)}
+.logo span{font:italic 400 29px/1 "Instrument Serif",Newsreader,Georgia,serif;letter-spacing:-.01em;color:#1a1a1a}
+.modetag{position:absolute;left:0;right:0;top:508px;text-align:center;font-size:11.5px;color:#8b8b8b;pointer-events:none;transition:opacity .3s}
 .minicam{position:absolute;left:306px;top:24.5px;width:74px;height:38px;border-radius:4px;filter:drop-shadow(0 2.5px 2.5px rgba(0,0,0,.3)) drop-shadow(0 5px 6px rgba(0,0,0,.12))}
 .minicam svg{display:block;width:100%;height:100%}
 .pop{position:absolute;left:18px;top:70px;z-index:20;background:rgba(245,245,245,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px;padding:10px;display:grid;grid-template-columns:repeat(5,36px);gap:8px;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);transform-origin:20px 0;transition:opacity .2s,transform .2s}
@@ -116,15 +114,22 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .led.on i{background:#7cc142;box-shadow:0 0 6px #9be05c,inset 0 1px 1px rgba(0,0,0,.15)}
 .seam{position:absolute;left:22px;right:22px;top:526px;height:2px;border-top:1px solid rgba(0,0,0,.08);border-bottom:1px solid rgba(255,255,255,.9)}
 .key{position:absolute;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 50% 28%,#6c635a 0,#4a433c 55%,#3b3530 100%);
-  box-shadow:0 0 0 5px #e4e1da,0 0 0 6px rgba(0,0,0,.06),0 3px 0 #2a2521,0 6px 9px rgba(0,0,0,.25),inset 0 1px 1px rgba(255,255,255,.22);transition:transform .07s,box-shadow .07s}
-.key:active,.key.press{transform:translateY(2px);box-shadow:0 0 0 5px #e4e1da,0 0 0 6px rgba(0,0,0,.06),0 1px 0 #2a2521,0 2px 4px rgba(0,0,0,.25),inset 0 1px 1px rgba(255,255,255,.15)}
-.key svg{width:19px;height:19px;fill:none;stroke:#f1ede6;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.key.big{width:98px;height:98px;background:radial-gradient(circle at 50% 28%,#ff9a52 0,#ee6a24 55%,#d9561a 100%);box-shadow:0 0 0 6px #e4e1da,0 0 0 7px rgba(0,0,0,.06),0 4px 0 #a8410f,0 8px 14px rgba(0,0,0,.22),inset 0 1px 1px rgba(255,255,255,.35)}
-.key.big:active,.key.big.press{transform:translateY(3px);box-shadow:0 0 0 6px #e4e1da,0 0 0 7px rgba(0,0,0,.06),0 1px 0 #a8410f,0 3px 6px rgba(0,0,0,.22),inset 0 1px 1px rgba(255,255,255,.3)}
-.key.big::after{content:"";width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55)}
+  background:radial-gradient(circle at 45% 32%,#fbfbf9 0,#d6d5d0 45%,#aeada7 78%,#96958f 100%);
+  box-shadow:0 0 0 5px #e2dfd8,0 0 0 6px rgba(0,0,0,.07),0 2px 3px rgba(0,0,0,.35),0 6px 10px rgba(0,0,0,.16),inset 0 2px 2px rgba(255,255,255,.95),inset 0 -2px 3px rgba(0,0,0,.14);transition:transform .07s,box-shadow .07s}
+.key::before{content:"";position:absolute;inset:5px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.035) 0 3deg,rgba(255,255,255,.05) 3deg 6deg);pointer-events:none}
+.key:active,.key.press{transform:scale(.95);box-shadow:0 0 0 5px #e2dfd8,0 0 0 6px rgba(0,0,0,.07),0 1px 1px rgba(0,0,0,.35),inset 0 2px 4px rgba(0,0,0,.22)}
+.key svg{position:relative;width:19px;height:19px;fill:none;stroke:#4a4741;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.dialring{position:absolute;left:131px;top:553px;width:136px;height:136px;border-radius:50%;
+  background:conic-gradient(from 20deg,#ebebe8,#a8a7a2,#f6f6f3,#9b9a95,#e6e5e1,#a4a39f,#f3f3f0,#9e9f9a,#ebebe8);
+  box-shadow:0 0 0 6px #e2dfd8,0 0 0 7px rgba(0,0,0,.07),0 3px 6px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.6)}
+.dialring::before{content:"";position:absolute;inset:7px;border-radius:50%;background:repeating-conic-gradient(rgba(0,0,0,.05) 0 2deg,transparent 2deg 4deg)}
+.key.big{left:30px !important;top:30px !important;width:76px;height:76px;background:radial-gradient(circle at 45% 30%,#ffb07a 0,#ee6a24 52%,#cf4f15 100%);
+  box-shadow:0 0 0 3px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.35),inset 0 2px 2px rgba(255,255,255,.45),inset 0 -2px 4px rgba(0,0,0,.2)}
+.key.big::before{display:none}
+.key.big:active,.key.big.press{transform:scale(.94);box-shadow:0 0 0 3px rgba(255,255,255,.55),0 1px 1px rgba(0,0,0,.35),inset 0 2px 5px rgba(0,0,0,.25)}
+.key.big::after{content:"";width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6)}
 .lbl{position:absolute;font:400 11px/1 Geist,sans-serif;color:#8c877e;text-align:center;width:80px;margin-left:-40px}
-.grille{position:absolute;left:254px;top:668px;display:grid;grid-template-columns:repeat(7,7px);gap:8px 9px}
+.grille{position:absolute;left:291px;top:670px;display:grid;grid-template-columns:repeat(5,7px);gap:8px 9px}
 .grille i{width:7px;height:7px;border-radius:50%;background:#3b3732;box-shadow:inset 0 1.5px 1px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.9)}
 .strip{position:absolute;left:0;right:0;top:806px;height:67px;display:flex;align-items:center;gap:4px;padding:0 177px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:340px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent)}
 .strip::-webkit-scrollbar{display:none}
@@ -148,16 +153,9 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 
   <!-- ============ GALLERY ============ -->
   <section class="screen" id="gallery" aria-label="Texture roll">
-    <div class="top">
-      <button class="tint" id="tintBtn" aria-label="Tint colour" aria-expanded="false"></button>
-      <div class="seg" id="modes" role="group" aria-label="Show as">
-        <button data-mode="image" aria-pressed="true" aria-label="Image"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="1.8"/><path d="m21 15-5-5L5 21"/></svg></button>
-        <button data-mode="folder" aria-pressed="false" aria-label="Folder"><svg class="ic" viewBox="0 0 24 24"><path d="M3.5 6.5A1.5 1.5 0 0 1 5 5h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v9.8A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg></button>
-        <button data-mode="envelope" aria-pressed="false" aria-label="Envelope"><svg class="ic" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3 6.5 9 6.5 9-6.5"/></svg></button>
-      </div>
-    </div>
+    <div class="logo" aria-label="textura"><i></i><span>textura</span></div>
     <button class="minicam" id="miniCam" aria-label="Open camera"></button>
-    <div class="pop off" id="pop" role="group" aria-label="Tint"></div>
+    <div class="pop off low" id="pop" role="group" aria-label="Tint"></div>
 
     <div class="roll" id="roll"></div>
     <div class="grid" id="grid" hidden></div>
@@ -173,7 +171,8 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
       </div>
     </div>
     <p class="empty" id="empty" hidden>No textures yet<small>Tap + to capture a surface.</small></p>
-    <p class="hint" id="hint">Swipe through your textures. Tap the circle to recolour, the camera to collect more.</p>
+    <p class="hint" id="hint">Swipe through your textures. Tap one to see it as a folder or an envelope.</p>
+    <p class="modetag" id="modetag"></p>
 
     <nav class="nav" role="group" aria-label="Main">
       <button id="navPlus" aria-label="New texture"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -207,13 +206,13 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
       <div class="seam" aria-hidden="true"></div>
       <button class="key" id="loadBtn" style="left:46px;top:566px" aria-label="Load a photo"><svg viewBox="0 0 24 24"><path d="M12 16V5m0 0-4 4m4-4 4 4"/><path d="M5 15v3a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-3"/></svg></button>
       <span class="lbl" style="left:74px;top:637px">load</span>
-      <button class="key big" id="shutter" style="left:150px;top:572px" aria-label="Take photo"></button>
-      <span class="lbl" style="left:199px;top:688px">capture</span>
+      <div class="dialring"><button class="key big" id="shutter" aria-label="Take photo"></button></div>
+      <span class="lbl" style="left:199px;top:705px">capture</span>
       <button class="key" id="flipBtn" style="left:295px;top:566px" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2"/><path d="M20 4v4h-4M4 20v-4h4"/></svg></button>
       <span class="lbl" style="left:323px;top:637px">flip</span>
       <button class="key" id="rollBtn" style="left:46px;top:672px" aria-label="Back to roll"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg></button>
       <span class="lbl" style="left:74px;top:743px">roll</span>
-      <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
     <div class="strip" id="strip"></div>
   </section>
@@ -447,8 +446,8 @@ function miniCamSVG() {
     <rect x=".5" y=".5" width="73" height="37" rx="3" fill="url(#mcb)" stroke="rgba(0,0,0,.08)"/>
     <rect x="2.1" y="2.1" width="43.3" height="33.8" rx="1.2" fill="#1c1c1b"/><rect x="3" y="3" width="41.5" height="32" rx=".6" fill="url(#mcs)"/>
     <line x1="50.3" y1="2" x2="50.3" y2="36" stroke="rgba(0,0,0,.08)" stroke-width=".4"/>
-    <circle cx="56.7" cy="7" r="2.7" fill="#463f38"/><circle cx="56.7" cy="31" r="2.7" fill="#463f38"/><circle cx="66.8" cy="31" r="2.7" fill="#463f38"/>
-    <circle cx="58" cy="19" r="4.7" fill="#ee6a24"/>
+    <circle cx="56.7" cy="7" r="2.7" fill="#cfceca" stroke="#9a9993" stroke-width=".5"/><circle cx="56.7" cy="31" r="2.7" fill="#cfceca" stroke="#9a9993" stroke-width=".5"/><circle cx="66.8" cy="31" r="2.7" fill="#cfceca" stroke="#9a9993" stroke-width=".5"/>
+    <circle cx="58" cy="19" r="6.6" fill="#c9c8c3" stroke="#9a9993" stroke-width=".5"/><circle cx="58" cy="19" r="3.8" fill="#ee6a24"/>
     ${[0, 1, 2, 3, 4].map(r => [0, 1, 2, 3].map(c => `<circle cx="${63.5 + c * 2}" cy="${3.5 + r * 1.6 + 0}" r=".45" fill="#3b3732"/>`).join('')).join('')}</svg>`;
 }
 $('miniCam').innerHTML = miniCamSVG();
@@ -487,13 +486,13 @@ function paintItem(el, it, asObj, force) {
   if (asObj && (ob.dataset.k !== okey || force)) { ob.innerHTML = (mode === 'envelope' ? envelopeSVG : folderSVG)(it.id + '_' + mode, url, tiled); ob.dataset.k = okey; }
 }
 function showInfo() {
-  const it = items[idx], none = !it; $('empty').hidden = !none || view === 'grid'; $('info').style.visibility = none ? 'hidden' : ''; $('hint').style.visibility = none ? 'hidden' : '';
+  const it = items[idx], none = !it; $('empty').hidden = !none || view === 'grid'; $('info').style.visibility = none ? 'hidden' : ''; $('hint').style.visibility = none ? 'hidden' : ''; $('modetag').style.visibility = none ? 'hidden' : '';
   if (none) return;
   $('name').textContent = it.name; $('when').textContent = fmtDate(it.date);
   $('where').textContent = it.coords || (it.sample ? 'Generated sample texture' : 'Location not saved');
 }
 function go(i) { const n = Math.max(0, Math.min(items.length - 1, i)); if (n === idx) return; idx = n; layout(); ensureTex(); }
-roll.addEventListener('click', e => { const el = e.target.closest('.it'); if (!el || drag.moved) return; const i = +el.dataset.i; if (i !== idx) go(i); });
+roll.addEventListener('click', e => { const el = e.target.closest('.it'); if (!el || drag.moved) return; const i = +el.dataset.i; if (i !== idx) go(i); else cycleMode(); });
 const drag = { x: 0, on: false, moved: false };
 roll.addEventListener('pointerdown', e => { drag.on = true; drag.x = e.clientX; drag.moved = false; });
 roll.addEventListener('pointermove', e => { if (drag.on && Math.abs(e.clientX - drag.x) > 8) drag.moved = true; });
@@ -503,27 +502,27 @@ let wheelLock = 0;
 roll.addEventListener('wheel', e => { const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0; if (Math.abs(d) < 12 || Date.now() < wheelLock) return; wheelLock = Date.now() + 380; go(idx + (d > 0 ? 1 : -1)); }, { passive: true });
 document.addEventListener('keydown', e => {
   if (!$('camera').classList.contains('off')) { if (e.key === 'Escape') showScreen('gallery'); if (e.key === ' ' || e.key === 'Enter') { if (e.target === document.body) { e.preventDefault(); snap(); } } return; }
-  if (e.key === 'ArrowRight') go(idx + 1); if (e.key === 'ArrowLeft') go(idx - 1); if (e.key === 'Escape') closePop();
+  if (e.key === 'Enter' && e.target === document.body) cycleMode(); if (e.key === 'ArrowRight') go(idx + 1); if (e.key === 'ArrowLeft') go(idx - 1); if (e.key === 'Escape') closePop();
 });
 
 /* ================= modes, tint, grid, nav ================= */
-$('modes').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; mode = b.dataset.mode;
-  for (const x of $('modes').children) x.setAttribute('aria-pressed', x === b); if (view !== 'roll') setView('roll'); layout(true); });
+const MODES = ['image', 'folder', 'envelope'], MODE_NAME = { image: 'image', folder: 'folder', envelope: 'envelope' };
+function cycleMode() { mode = MODES[(MODES.indexOf(mode) + 1) % 3]; layout(true); showModeTag(); }
+function showModeTag() { const next = MODES[(MODES.indexOf(mode) + 1) % 3]; $('modetag').textContent = `Showing as ${MODE_NAME[mode]} · tap for ${MODE_NAME[next]}`; }
 const pop = $('pop');
 pop.innerHTML = TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('') + '<p>Recolour the extracted texture</p>';
-const closePop = () => { pop.classList.add('off'); $('tintBtn').setAttribute('aria-expanded', 'false'); $('navColour').setAttribute('aria-expanded', 'false'); };
+const closePop = () => { pop.classList.add('off'); $('navColour').setAttribute('aria-expanded', 'false'); };
 $('navColour').addEventListener('click', e => { e.stopPropagation(); const wasOpen = !pop.classList.contains('off') && pop.classList.contains('low'); closePop(); if (wasOpen) return; pop.classList.add('low'); pop.classList.remove('off'); $('navColour').setAttribute('aria-expanded', 'true'); });
-$('tintBtn').addEventListener('click', e => { e.stopPropagation(); pop.classList.remove('low'); $('navColour').setAttribute('aria-expanded', 'false'); const open = pop.classList.toggle('off'); $('tintBtn').setAttribute('aria-expanded', String(!open)); });
-document.addEventListener('click', e => { if (!pop.contains(e.target) && e.target !== $('tintBtn') && !$('navColour').contains(e.target)) closePop(); });
+document.addEventListener('click', e => { if (!pop.contains(e.target) && !$('navColour').contains(e.target)) closePop(); });
 pop.addEventListener('click', async e => { const b = e.target.closest('button'); if (!b) return; tint = b.dataset.t || null;
   for (const x of pop.querySelectorAll('button')) x.setAttribute('aria-pressed', x === b);
-  $('tintBtn').style.background = tint || ''; $('navSw').style.background = tint || ''; closePop(); layout(true); if (view === 'grid') buildGrid(); ensureTex(); });
+  $('navSw').style.background = tint || ''; closePop(); layout(true); if (view === 'grid') buildGrid(); ensureTex(); });
 function buildGrid() {
   $('grid').innerHTML = items.map((it, i) => { const { url: u, tiled } = texOf(it); return `<button data-i="${i}" aria-label="${esc(it.name)}"><div class="g${tiled ? ' tile' : ''}${u ? '' : ' shimmer'}" style="${u ? `background-image:url(${u})` : ''}"></div><div class="n">${esc(it.name)}</div><div class="d">${esc(fmtDate(it.date))}</div></button>`; }).join('');
 }
 $('grid').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; idx = +b.dataset.i; setView('roll'); layout(); ensureTex(); });
 function setView(v) {
-  view = v; $('grid').hidden = v !== 'grid'; roll.hidden = v === 'grid'; $('info').style.opacity = v === 'grid' ? 0 : 1; $('info').style.pointerEvents = v === 'grid' ? 'none' : ''; $('hint').hidden = v === 'grid';
+  view = v; $('grid').hidden = v !== 'grid'; roll.hidden = v === 'grid'; $('info').style.opacity = v === 'grid' ? 0 : 1; $('info').style.pointerEvents = v === 'grid' ? 'none' : ''; $('hint').hidden = v === 'grid'; $('modetag').hidden = v === 'grid';
   $('navRoll').setAttribute('aria-pressed', v === 'roll'); $('navGrid').setAttribute('aria-pressed', v === 'grid'); if (v === 'grid') buildGrid();
 }
 $('navRoll').addEventListener('click', () => setView('roll'));
@@ -707,7 +706,7 @@ buildRoll();
   it.url = makeSample(SAMPLES[it.si][1]); layout(true); if (view === 'grid') buildGrid(); ensureTex();
   setTimeout(gen, 30);
 })();
-ensureTex();
+ensureTex(); showModeTag();
 }
 </script>
 </body>
