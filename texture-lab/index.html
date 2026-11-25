@@ -839,7 +839,7 @@ $('dl').addEventListener('click', async () => {
 /* ================= fit the phone screen ================= */
 let scale = 1;
 function fit() {
-  const vv = window.visualViewport, W = Math.round(vv ? vv.width : innerWidth), H = Math.round(vv ? vv.height : innerHeight), phone = W < 560;
+  const vv = window.visualViewport, W = Math.round(vv ? vv.width : innerWidth), H = Math.round(vv ? vv.height : innerHeight), phone = W < 560 || (matchMedia('(pointer: coarse)').matches && W < 900);
   document.body.classList.toggle('phone', phone);
   AW = phone ? W : 430; AH = phone ? H : 932; scale = phone ? 1 : Math.min(1, (H - 48) / AH, (W - 48) / AW);
   const app = $('app'), fr = $('frame'), r = document.documentElement.style;
