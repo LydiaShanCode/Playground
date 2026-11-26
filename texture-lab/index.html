@@ -47,10 +47,11 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .pop p{grid-column:1/-1;margin:2px 2px 0;font-size:11.5px;color:var(--muted)}
 
 /* carousel */
-.roll{position:absolute;left:0;right:0;top:92px;height:462px;perspective:900px;perspective-origin:50% 50%;transform-style:preserve-3d;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.roll{position:absolute;left:0;right:0;top:92px;height:462px;perspective:900px;perspective-origin:50% 50%;transform-style:preserve-3d;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
 .it{position:absolute;transition:transform .5s cubic-bezier(.2,.8,.2,1),left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1),height .45s cubic-bezier(.2,.8,.2,1),opacity .4s,border-radius .45s;cursor:pointer;backface-visibility:hidden}
 .it:not(.center) .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.18),rgba(0,0,0,0) 60%)}
 .it .ph{position:absolute;inset:0;overflow:hidden;border-radius:inherit;background-color:#bdbdbb;background-repeat:no-repeat;background-position:0 0;background-size:332px 442px;transition:opacity .35s}
+.roll.dragging .it{transition:opacity .2s,border-radius .45s !important}
 .it.tile .ph{background-repeat:repeat;background-size:112px 112px;background-position:center}
 .it.tile.glassy .ph{background-size:200px 200px}
 .grid .g.tile.glassy{background-size:118px}
@@ -707,19 +708,21 @@ function buildRoll() {
     <div class="osd"><span style="left:0;top:0">${String(i + 1).padStart(2, '0')}/${String(items.length).padStart(2, '0')}</span><span style="left:0;bottom:0">${esc(new Date(it.date).toLocaleDateString('en-GB', { year: '2-digit', month: '2-digit', day: '2-digit' }).split('/').reverse().join('/'))}</span><span style="right:0;bottom:0">${esc(new Date(it.date).toTimeString().slice(0, 5))}</span></div></div>`).join('');
   layout(true);
 }
+let pos = 0;                                                         // continuous roll position; idx is the card nearest the centre
 function layout(force) {
   const [w, h] = GEOM[mode], CY = ROLL_H / 2, STEP = 16, GAP = 20;
+  if (!roll.classList.contains('dragging')) pos = idx;
   for (const el of roll.children) {
-    const i = +el.dataset.i, d = i - idx, a = Math.abs(d), sg = Math.sign(d), it = items[i];
+    const i = +el.dataset.i, d = i - pos, a = Math.abs(d), sg = Math.sign(d), it = items[i];
     el.style.left = AW / 2 - w / 2 + 'px'; el.style.top = CY - h / 2 + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px';
-    // side items hinge on their inner edge and swing their outer edge away from you
+    // side items hinge on their inner edge and swing their outer edge away from you; everything is continuous in d so dragging is smooth
     el.style.transformOrigin = sg > 0 ? '0% 50%' : sg < 0 ? '100% 50%' : '50% 50%';
-    // neighbours sit just past the edge of the screen so ~10% peeks in; each step further out turns a little more
-    el.style.transform = d === 0 ? 'none' : `translateX(${sg * (w + GAP + (a - 1) * (w * .35))}px) translateZ(${-(a - 1) * 30}px) rotateY(${sg * Math.min(a * STEP, 60)}deg)`;
-    el.style.zIndex = String(50 - a); el.style.opacity = a > 2 ? 0 : 1;
+    const tx = a <= 1 ? a * (w + GAP) : (w + GAP) + (a - 1) * w * .35, tz = a <= 1 ? 0 : -(a - 1) * 30;
+    el.style.transform = a < .001 ? 'none' : `translateX(${sg * tx}px) translateZ(${tz}px) rotateY(${sg * Math.min(a * STEP, 60)}deg)`;
+    el.style.zIndex = String(50 - Math.round(a * 10)); el.style.opacity = a <= 2 ? 1 : Math.max(0, 3 - a);
     el.style.borderRadius = mode === 'image' ? '18px' : '0';
-    const asObj = mode !== 'image' && a < 3;
-    el.classList.toggle('as-obj', asObj); el.classList.toggle('env', mode === 'envelope'); el.classList.toggle('center', d === 0); el.classList.toggle('card', mode === 'image' && d === 0);
+    const asObj = mode !== 'image' && a < 3, ctr = i === idx;
+    el.classList.toggle('as-obj', asObj); el.classList.toggle('env', mode === 'envelope'); el.classList.toggle('center', ctr); el.classList.toggle('card', mode === 'image' && ctr);
     el.style.visibility = a > 5 ? 'hidden' : '';
     paintItem(el, it, asObj, force);
   }
@@ -740,15 +743,45 @@ function showInfo() {
   $('name').textContent = it.name; $('when').textContent = fmtDate(it.date);
   $('where').textContent = it.coords || (it.sample ? 'Generated sample texture' : 'Location not saved');
 }
-function go(i) { const n = Math.max(0, Math.min(items.length - 1, i)); if (n === idx) return; idx = n; layout(); ensureTex(); }
+function go(i) { const n = Math.max(0, Math.min(items.length - 1, i)); roll.classList.remove('dragging'); if (n === idx) { layout(); return; } idx = n; layout(); ensureTex(); }
 roll.addEventListener('click', e => { const el = e.target.closest('.it'); if (!el || drag.moved) return; const i = +el.dataset.i; if (i !== idx) go(i); else cycleMode(); });
-const drag = { x: 0, on: false, moved: false };
-roll.addEventListener('pointerdown', e => { drag.on = true; drag.x = e.clientX; drag.moved = false; });
-roll.addEventListener('pointermove', e => { if (drag.on && Math.abs(e.clientX - drag.x) > 8) drag.moved = true; });
-roll.addEventListener('pointerup', e => { if (!drag.on) return; drag.on = false; const dx = (e.clientX - drag.x) / scale; if (Math.abs(dx) > 36) go(idx + (dx < 0 ? 1 : -1)); setTimeout(() => drag.moved = false, 0); });
-roll.addEventListener('pointercancel', () => drag.on = false);
-let wheelLock = 0;
-roll.addEventListener('wheel', e => { const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0; if (Math.abs(d) < 12 || Date.now() < wheelLock) return; wheelLock = Date.now() + 380; go(idx + (d > 0 ? 1 : -1)); }, { passive: true });
+// drag / swipe: the roll follows the finger 1:1, then snaps to the nearest card (a flick carries to the next one)
+const drag = { x: 0, on: false, moved: false, start: 0, vx: 0, lx: 0, lt: 0, id: null };
+const stepPx = () => (GEOM[mode][0] + 20) * scale;
+function dragTo(p) {
+  const max = items.length - 1, over = p < 0 ? p : p > max ? p - max : 0;
+  pos = over ? (p - over) + over * .3 : p;                          // rubber-band past the ends
+  const n = Math.max(0, Math.min(max, Math.round(pos)));
+  if (n !== idx) idx = n;
+  layout();
+}
+roll.addEventListener('pointerdown', e => {
+  if (!items.length) return;
+  drag.on = true; drag.moved = false; drag.x = drag.lx = e.clientX; drag.lt = performance.now(); drag.vx = 0; drag.start = idx; drag.id = e.pointerId;
+});
+roll.addEventListener('pointermove', e => {
+  if (!drag.on || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x;
+  if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; roll.classList.add('dragging'); try { roll.setPointerCapture(e.pointerId); } catch {} }
+  if (!drag.moved) return;
+  const t = performance.now(), dt = Math.max(1, t - drag.lt); drag.vx = .8 * ((e.clientX - drag.lx) / dt) + .2 * drag.vx; drag.lx = e.clientX; drag.lt = t;
+  dragTo(drag.start - dx / stepPx());
+});
+function endDrag() {
+  if (!drag.on) return; drag.on = false;
+  if (drag.moved) { const fling = -drag.vx * 180 / stepPx(); let target = Math.round(pos + Math.max(-.6, Math.min(.6, fling)));
+    target = Math.max(0, Math.min(items.length - 1, target)); roll.classList.remove('dragging'); idx = target; pos = target; layout(); ensureTex(); }
+  setTimeout(() => drag.moved = false, 0);
+}
+roll.addEventListener('pointerup', endDrag); roll.addEventListener('pointercancel', endDrag); roll.addEventListener('lostpointercapture', endDrag);
+// trackpad: two-finger horizontal scroll follows continuously, then snaps
+let wheelT = 0;
+roll.addEventListener('wheel', e => {
+  const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : 0; if (!d || !items.length) return;
+  if (!roll.classList.contains('dragging')) { roll.classList.add('dragging'); pos = idx; }
+  dragTo(pos + d / stepPx());
+  clearTimeout(wheelT); wheelT = setTimeout(() => { roll.classList.remove('dragging'); idx = Math.max(0, Math.min(items.length - 1, Math.round(pos))); pos = idx; layout(); ensureTex(); }, 140);
+}, { passive: true });
 document.addEventListener('keydown', e => {
   if (!$('camera').classList.contains('off')) { if (e.key === 'Escape') showScreen('gallery'); if (e.key === ' ' || e.key === 'Enter') { if (e.target === document.body) { e.preventDefault(); snap(); } } return; }
   if (e.key === 'Enter' && e.target === document.body) cycleMode(); if (e.key === 'ArrowRight') go(idx + 1); if (e.key === 'ArrowLeft') go(idx - 1); if (e.key === 'Escape') closePop();
