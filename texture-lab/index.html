@@ -34,6 +34,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .logo{position:absolute;left:26px;top:calc(27px + var(--safe-t,0px));height:36px;display:flex;align-items:center;gap:8px;user-select:none}
 .logo i{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 40% 32%,#fff,#bdbdb8 60%,#8d8d88);box-shadow:0 0 0 1px rgba(0,0,0,.18)}
 .logo span{font:italic 400 28px/1 "Sorts Mill Goudy",Newsreader,Georgia,serif;letter-spacing:-1px;color:#7a7a77}
+.logo .mark{font:28px/1 system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;letter-spacing:0;filter:grayscale(1) brightness(1.35) contrast(.8);opacity:.55}
 .modetag{position:absolute;left:0;right:0;top:526px;text-align:center;font-size:11.5px;color:#8b8b8b;pointer-events:none;transition:opacity .3s}
 .minicam{position:absolute;right:22px;top:calc(24.5px + var(--safe-t,0px));width:74px;height:38px;border-radius:4px;filter:drop-shadow(0 2.5px 2.5px rgba(0,0,0,.3)) drop-shadow(0 5px 6px rgba(0,0,0,.12))}
 .minicam svg{display:block;width:100%;height:100%}
@@ -176,7 +177,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 
   <!-- ============ GALLERY ============ -->
   <section class="screen off" id="gallery" aria-label="Texture roll">
-    <div class="logo" aria-label="textura"><span>textura</span></div>
+    <div class="logo" aria-label="textura"><span class="mark">🌠</span></div>
     <button class="minicam" id="miniCam" aria-label="Open camera"></button>
     <div class="pop off low" id="pop" role="group" aria-label="Tint"></div>
 
@@ -446,11 +447,11 @@ const toast = (m, act, fn) => { const t = $('toast'); t.textContent = m; t.class
   if (act) { const b = document.createElement('button'); b.textContent = act; b.onclick = () => { t.classList.remove('show'); fn(); }; t.append(b); }
   t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), act ? 5000 : 2600); };
 // pastel palette: keep a little saturation, then lift every colour toward white to a soft, light value
-const pastel = (hex, k = 1) => { const n = parseInt(hex.slice(1), 16); let c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+const pastel = (hex, k = 1, tgt = .83) => { const n = parseInt(hex.slice(1), 16); let c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   const l0 = (.299 * c[0] + .587 * c[1] + .114 * c[2]) / 255; c = c.map(v => v + (l0 * 255 - v) * .22);
-  const l = (.299 * c[0] + .587 * c[1] + .114 * c[2]) / 255, w = k * Math.max(0, (.83 - l) / (1 - l));
+  const l = (.299 * c[0] + .587 * c[1] + .114 * c[2]) / 255, w = k * Math.max(0, (tgt - l) / (1 - l));
   return '#' + c.map(v => Math.round(v + (255 - v) * w).toString(16).padStart(2, '0')).join(''); };
-const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'].map(h => h && pastel(h));
+const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'].map((h, i) => h && pastel(h, 1, [.83, .74, .8, .7, .83, .76, .85, .72, .79][(i - 1 + 9) % 9]));   // some a smidge deeper for variety
 /* ---------- aura / mesh gradients: soft lumpy blobs, heavily blurred, with film grain ---------- */
 // each blob: [colour, x, y, radius, wobble seed]; positions/radii are fractions of the square
 const GRADS = {
@@ -460,7 +461,7 @@ const GRADS = {
   peach: { name: 'Peach', base: '#fbefe8', blobs: [['#f4a08a', .3, .3, .3, 1], ['#f7c7a3', .72, .6, .34, 2], ['#e6b2dd', .25, .82, .26, 3], ['#fbd9c4', .8, .15, .2, 4]] },
   mint: { name: 'Mint', base: '#eff7f1', blobs: [['#9dd8bf', .35, .35, .34, 1], ['#c9e6a0', .72, .72, .3, 2], ['#a9c9f1', .8, .25, .22, 3], ['#e6f2d6', .3, .85, .22, 4]] },
 };
-for (const g of Object.values(GRADS)) { g.base = pastel(g.base, .5); for (const b of g.blobs) b[0] = pastel(b[0], .62); }
+Object.values(GRADS).forEach((g, i) => { const t = [.83, .74, .83, .76, .8][i % 5]; g.base = pastel(g.base, .5, t); for (const b of g.blobs) b[0] = pastel(b[0], .62, t); });
 const gradCache = {};
 function gradPixels(key) {
   if (gradCache[key]) return gradCache[key];
@@ -493,7 +494,7 @@ let items = SAMPLES.map(([name, , kind], i) => ({ id: 'n' + i, kind: kind || 're
 try { const saved = JSON.parse(localStorage.getItem(LKEY) || '[]'); if (Array.isArray(saved)) items = saved.filter(x => x && x.url && x.id).concat(items); } catch {}
 let idx = 0, mode = 'image', view = 'roll';
 // every texture gets its own colour: picked at random the first time, remembered, changeable from the colour menu
-const TKEY = 'texture-lab.tints.v2';
+const TKEY = 'texture-lab.tints.v3';
 let tintMap = {}; try { tintMap = JSON.parse(localStorage.getItem(TKEY) || '{}') || {}; } catch {}
 const CHOICES = () => TINTS.filter(Boolean).concat(Object.keys(GRADS).map(k => 'g:' + k));
 function tintOf(it) {
@@ -675,9 +676,9 @@ const MODES = ['image', 'folder', 'envelope'], MODE_NAME = { image: 'image', fol
 function cycleMode() { mode = MODES[(MODES.indexOf(mode) + 1) % 3]; layout(true); showModeTag(); }
 function showModeTag() { const next = MODES[(MODES.indexOf(mode) + 1) % 3]; $('modetag').textContent = `Showing as ${MODE_NAME[mode]} · tap for ${MODE_NAME[next]}`; }
 const pop = $('pop');
-pop.innerHTML = TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('')
-  + Object.entries(GRADS).map(([k, g]) => `<button data-t="g:${k}" class="grad" style="background-image:url(${swatchUrl(k)})" aria-label="${g.name} gradient" aria-pressed="false"></button>`).join('')
-  + '<p>Solid colours, then mesh gradients</p>';
+pop.innerHTML = Object.entries(GRADS).map(([k, g]) => `<button data-t="g:${k}" class="grad" style="background-image:url(${swatchUrl(k)})" aria-label="${g.name} gradient" aria-pressed="false"></button>`).join('')
+  + TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('')
+  + '<p>Mesh gradients, then solid colours</p>';
 function syncTintUI() {
   const t = tintOf(items[idx]) || null;
   for (const x of pop.querySelectorAll('button')) x.setAttribute('aria-pressed', (x.dataset.t || null) === t);
