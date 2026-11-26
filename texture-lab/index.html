@@ -447,7 +447,7 @@ const toast = (m, act, fn) => { const t = $('toast'); t.textContent = m; t.class
   t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), act ? 5000 : 2600); };
 // pastel palette: keep a little saturation, then lift every colour toward white to a soft, light value
 const pastel = (hex, k = 1) => { const n = parseInt(hex.slice(1), 16); let c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  const l0 = (.299 * c[0] + .587 * c[1] + .114 * c[2]) / 255; c = c.map(v => v + (l0 * 255 - v) * .06);
+  const l0 = (.299 * c[0] + .587 * c[1] + .114 * c[2]) / 255; c = c.map(v => v + (l0 * 255 - v) * .22);
   const l = (.299 * c[0] + .587 * c[1] + .114 * c[2]) / 255, w = k * Math.max(0, (.83 - l) / (1 - l));
   return '#' + c.map(v => Math.round(v + (255 - v) * w).toString(16).padStart(2, '0')).join(''); };
 const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'].map(h => h && pastel(h));
