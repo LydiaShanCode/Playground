@@ -488,7 +488,7 @@ const lum = h => { const n = parseInt(h.slice(1), 16); return (.299 * ((n >> 16)
 const isGrad = t => !!t && t.startsWith('g:');
 const baseFor = t => isGrad(t) ? gradPixels(t.slice(2)) : solid(t);
 const swatchUrl = key => toCanvas(gradPixels(key)).toDataURL('image/jpeg', .8);
-const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v4';
+const LKEY = 'texture-lab.roll.v1', DKEY = 'texture-lab.deleted.v5';
 let gone = []; try { gone = JSON.parse(localStorage.getItem(DKEY) || '[]'); } catch {}
 const now = Date.now();
 let items = SAMPLES.map(([name, , kind], i) => ({ id: 'n' + i, kind: kind || 'relief', name, date: now - (i + 1) * 9.3e6 * (i + 1), coords: null, sample: true, url: null, si: i })).filter(x => !gone.includes(x.id));
