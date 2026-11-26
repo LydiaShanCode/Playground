@@ -956,7 +956,7 @@ async function snap() {
     const d = g.getImageData(0, 0, 16, 16).data; let sum = 0; for (let i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] + d[i + 2];
     if (sum / (16 * 16 * 3) < 6) { toast('Camera isn’t ready yet. Try again in a second.'); return; } }
   const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
-  await addCapture(frameToUrl(video, video.videoWidth, video.videoHeight)); toast('Captured. Press ROLL to see it.');
+  await addCapture(frameToUrl(video, video.videoWidth, video.videoHeight));
 }
 $('file').addEventListener('change', async e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file || !file.type.startsWith('image/')) return;
