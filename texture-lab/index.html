@@ -677,9 +677,10 @@ const MODES = ['image', 'folder', 'envelope'], MODE_NAME = { image: 'image', fol
 function cycleMode() { mode = MODES[(MODES.indexOf(mode) + 1) % 3]; layout(true); showModeTag(); }
 function showModeTag() { const next = MODES[(MODES.indexOf(mode) + 1) % 3]; $('modetag').textContent = `Showing as ${MODE_NAME[mode]} · tap for ${MODE_NAME[next]}`; }
 const pop = $('pop');
-pop.innerHTML = Object.entries(GRADS).map(([k, g]) => `<button data-t="g:${k}" class="grad" style="background-image:url(${swatchUrl(k)})" aria-label="${g.name} gradient" aria-pressed="false"></button>`).join('')
-  + TINTS.map(h => h ? `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>` : `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`).join('')
-  + '<p>Mesh gradients, then solid colours</p>';
+pop.innerHTML = `<button class="orig" data-t="" aria-label="Original colours" aria-pressed="true"></button>`
+  + Object.entries(GRADS).map(([k, g]) => `<button data-t="g:${k}" class="grad" style="background-image:url(${swatchUrl(k)})" aria-label="${g.name} gradient" aria-pressed="false"></button>`).join('')
+  + TINTS.filter(Boolean).map(h => `<button data-t="${h}" style="background:${h}" aria-label="Tint ${h}" aria-pressed="false"></button>`).join('')
+  + '<p>Original, mesh gradients, then solid colours</p>';
 function syncTintUI() {
   const t = tintOf(items[idx]) || null;
   for (const x of pop.querySelectorAll('button')) x.setAttribute('aria-pressed', (x.dataset.t || null) === t);
