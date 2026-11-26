@@ -101,10 +101,13 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 #camera{transition:none}
 #camera.off{transform:none}
 .body{position:absolute;left:8px;right:8px;top:calc(8px + var(--safe-t,0px));bottom:calc(97px + env(safe-area-inset-bottom));border-radius:30px;overflow:hidden;transform-origin:50% 50%;
-  background:var(--m-body) center/100% 100% no-repeat,#c9c9c6;
+  background:var(--m-body) 50% calc(50% + var(--ly,0) * 6%)/100% 112% no-repeat,#c9c9c6;
   box-shadow:0 6px 10px 4px rgba(0,0,0,.14),0 2px 3px rgba(0,0,0,.3)}
 .body::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2.5px;z-index:3;background:linear-gradient(145deg,#fff 0%,rgba(255,255,255,.95) 10%,rgba(255,255,255,.2) 32%,rgba(255,255,255,0) 50%,rgba(0,0,0,.08) 68%,rgba(0,0,0,.4) 92%,rgba(0,0,0,.55) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none}
 .body::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:14px;z-index:2;background:linear-gradient(145deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.25) 20%,rgba(255,255,255,0) 42%,rgba(0,0,0,0) 60%,rgba(0,0,0,.12) 82%,rgba(0,0,0,.26) 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);pointer-events:none;filter:blur(1px)}
+.sheen{position:absolute;inset:-20%;pointer-events:none;z-index:1;mix-blend-mode:overlay;opacity:.8;
+  background:radial-gradient(42% 30% at calc(50% - var(--lx,0) * 45%) calc(38% - var(--ly,0) * 40%),rgba(255,255,255,.95),rgba(255,255,255,0) 72%),
+             radial-gradient(60% 40% at calc(50% + var(--lx,0) * 40%) calc(85% + var(--ly,0) * 25%),rgba(0,0,0,.38),rgba(0,0,0,0) 72%)}
 .body .grain{display:none}
 .frame{position:absolute;left:16px;right:16px;top:16px;bottom:269px;border-radius:20px;
   background:var(--m-frame) center/100% 100% no-repeat,#d6d6d3;
@@ -133,15 +136,17 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .vwin,.vwlbl{display:none}
 /* full-screen camera: viewfinder window takes the old roll slot, TEX moves up beside the dial */
 .full .vthumb{display:none!important}
-.full .vwlbl{display:block;bottom:48px!important}
-.full #texLbl{left:auto!important;right:78px;bottom:226px!important;text-align:right}
-.full #texSock{left:auto!important;right:14px;bottom:200px!important;transform:scale(.74);transform-origin:50% 50%}
-.full .vwin{display:block;position:absolute;left:89px;bottom:14px;width:62px;height:76px;border-radius:12px;padding:6px;-webkit-tap-highlight-color:transparent;
-  background:var(--m-spun) center/180% 180%,#cfcfcc;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.18),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -2px 3px rgba(0,0,0,.2),0 1px 0 #b0b0ab,0 2px 0 #9c9c97,0 3px 1px #85857f,1px 6px 7px rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
-.full .vwin:active{transform:translateY(2px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.18),inset 0 1.5px 0 rgba(255,255,255,.9),0 1px 0 #9c9c97,1px 2px 3px rgba(0,0,0,.35)}
+.full .vwlbl{display:block;bottom:86px!important}
+.full #texLbl,.full #texSock{display:none!important}
+.full .slide{left:auto;right:26px;bottom:238px}
+.full .rearlbl{left:auto!important;right:66px;bottom:218px!important}
+.full .frontlbl{left:auto!important;right:24px;bottom:218px!important}
+.full .vwin{display:block;position:absolute;left:86px;bottom:40px;width:68px;height:88px;border-radius:12px;padding:6px;-webkit-tap-highlight-color:transparent;
+  background:linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.04) 40%,rgba(255,255,255,.12)),var(--m-spun) center/180% 180%,#bdbdb9;
+  box-shadow:inset 0 3px 5px rgba(0,0,0,.42),inset 0 1px 1px rgba(0,0,0,.35),inset 0 -1px 0 rgba(255,255,255,.55),0 1px 0 rgba(255,255,255,.85),0 -1px 0 rgba(0,0,0,.18);transition:filter .08s}
+.full .vwin:active{filter:brightness(.92)}
 .full .vwin .glass{position:absolute;inset:6px;border-radius:7px;background:#111 center/cover no-repeat;overflow:hidden;
-  box-shadow:inset 0 0 0 2px #1b1b1b,inset 0 3px 6px rgba(0,0,0,.75),inset 0 -1px 2px rgba(255,255,255,.15)}
+  box-shadow:inset 0 0 0 2px #1b1b1b,inset 0 4px 8px rgba(0,0,0,.8),inset 0 -1px 2px rgba(255,255,255,.12),0 1px 0 rgba(255,255,255,.35)}
 .full .vwin .glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:linear-gradient(135deg,rgba(255,255,255,.42) 0,rgba(255,255,255,.08) 34%,transparent 35%,transparent 70%,rgba(255,255,255,.06) 100%)}
 .full .vthumb{display:block;position:absolute;left:50%;bottom:16px;width:44px;height:58px;margin-left:-22px;z-index:4;border-radius:4px;border:1.5px solid rgba(255,255,255,.9);
@@ -164,13 +169,13 @@ body.full #app{border-radius:0}
 .prt.red{color:#585855}
 .prt svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
 .key{position:absolute;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:translateY(-8px);
-  background:var(--m-dome) center/100% 100% no-repeat,#cfcfcc;
+  background:var(--m-dome) calc(50% + var(--lx,0) * 26%) calc(50% + var(--ly,0) * 26%)/135% 135% no-repeat,#cfcfcc;
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),inset 0 2px 1px #fff,inset 0 -2px 3px rgba(0,0,0,.14),0 1px 0 #b4b4af,0 2px 0 #aaaaa5,0 3px 0 #a0a09b,0 4px 0 #979792,0 5px 0 #8e8e89,0 6px 0 #868681,0 7px 0 #7e7e79,0 8px 0 #74746f,2px 12px 8px rgba(0,0,0,.4),4px 16px 16px rgba(0,0,0,.18);transition:transform .08s,box-shadow .08s}
 .key::before{display:none}
 .key:active,.key.press{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),inset 0 2px 3px rgba(0,0,0,.12),0 1px 0 #b4b4af,0 2px 0 #979792,0 3px 0 #74746f,1px 5px 4px rgba(0,0,0,.4)}
 .key svg{position:relative;width:18px;height:18px;fill:none;stroke:#55554f;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .dialring{position:absolute;right:67px;bottom:58px;width:150px;height:150px;border-radius:50%;
-  background:radial-gradient(circle,#232322 0 31%,rgba(0,0,0,.3) 31.5%,rgba(255,255,255,.35) 33%,transparent 34.5%),var(--m-spun) center/100% 100% no-repeat;
+  background:radial-gradient(circle,#232322 0 31%,rgba(0,0,0,.3) 31.5%,rgba(255,255,255,.35) 33%,transparent 34.5%),var(--m-spun) calc(50% + var(--lx,0) * 18%) calc(50% + var(--ly,0) * 18%)/125% 125% no-repeat;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),inset 0 -2px 3px rgba(0,0,0,.15),0 1px 0 #a3a39e,0 2px 0 #999994,0 3px 0 #8f8f8a,0 4px 0 #858580,0 5px 1px #77776f,2px 10px 10px rgba(0,0,0,.32)}
 .dialring::before{display:none}
 .dialring .tick{position:absolute;width:5px;height:5px;border-radius:50%;background:#55554f;box-shadow:0 1px 0 rgba(255,255,255,.7)}
@@ -247,7 +252,7 @@ body.full #app{border-radius:0}
 
   <!-- ============ CAMERA ============ -->
   <section class="screen" id="camera" aria-label="Camera">
-    <div class="body" id="camBody"><div class="grain"></div>
+    <div class="body" id="camBody"><div class="grain"></div><div class="sheen" aria-hidden="true"></div>
       <div class="frame">
         <div class="bezel">
           <div class="lcd" id="lcd">
@@ -273,7 +278,7 @@ body.full #app{border-radius:0}
       <span class="lbl" style="left:24px;bottom:202px">LOAD</span>
       <div class="sock" style="left:87px;bottom:174px"><button class="key" id="loadBtn" aria-label="Load a photo"><svg viewBox="0 0 24 24"><path d="M12 16V5m0 0-4 4m4-4 4 4"/><path d="M5 15v3a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18v-3"/></svg></button></div>
       <button class="slide" id="flipBtn" aria-label="Switch between back and front camera"><span class="knob"></span></button>
-      <span class="prt" style="left:79px;bottom:100px">REAR</span><span class="prt red" style="left:118px;bottom:100px">FRONT</span>
+      <span class="prt rearlbl" style="left:79px;bottom:100px">REAR</span><span class="prt red frontlbl" style="left:118px;bottom:100px">FRONT</span>
       <span class="lbl" id="texLbl" style="left:24px;bottom:54px">TEX</span>
       <div class="sock" id="texSock" style="left:87px;bottom:26px"><button class="key" id="texBtn" aria-label="Texture view" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="7" cy="7" r="1.3"/><circle cx="12" cy="6" r="1"/><circle cx="17" cy="8" r="1.4"/><circle cx="8" cy="12" r="1"/><circle cx="13" cy="12.5" r="1.5"/><circle cx="18" cy="13" r="1"/><circle cx="6" cy="17" r="1.4"/><circle cx="11.5" cy="17.5" r="1"/><circle cx="16.5" cy="18" r="1.3"/></svg></button></div>
       <span class="lbl vwlbl" style="left:24px;bottom:54px">VIEW</span>
@@ -1225,6 +1230,21 @@ const SFX = (() => {
 for (const id of ['loadBtn', 'texBtn']) $(id).addEventListener('pointerdown', () => SFX.key());
 $('flipBtn').addEventListener('pointerdown', () => SFX.slide());
 $('shutter').addEventListener('pointerdown', () => SFX.shutter());
+
+/* ================= light follows the phone's tilt (or the mouse on desktop) ================= */
+{
+  const root = document.documentElement.style; let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, asked = false;
+  const tick = () => { cx += (tx - cx) * .12; cy += (ty - cy) * .12; root.setProperty('--lx', cx.toFixed(3)); root.setProperty('--ly', cy.toFixed(3));
+    raf = Math.abs(tx - cx) + Math.abs(ty - cy) > .002 ? requestAnimationFrame(tick) : 0; };
+  const set = (x, y) => { tx = Math.max(-1, Math.min(1, x)); ty = Math.max(-1, Math.min(1, y)); if (!raf) raf = requestAnimationFrame(tick); };
+  const onTilt = e => { if (e.gamma == null) return; set(e.gamma / 30, (e.beta - 45) / 30); };   // held at ~45° = neutral
+  const listen = () => addEventListener('deviceorientation', onTilt);
+  const DOE = window.DeviceOrientationEvent;
+  if (DOE && typeof DOE.requestPermission === 'function') {          // iOS asks once, on the first tap
+    addEventListener('pointerdown', () => { if (asked) return; asked = true; DOE.requestPermission().then(r => r === 'granted' && listen()).catch(() => {}); }, { once: true });
+  } else if (DOE) listen();
+  if (matchMedia('(pointer: fine)').matches) addEventListener('pointermove', e => { const a = $('app').getBoundingClientRect(); set(((e.clientX - a.left) / a.width - .5) * 2, ((e.clientY - a.top) / a.height - .5) * 2); });
+}
 
 /* ================= stay up to date (some mobile browsers restore stale copies of a tab) ================= */
 {
