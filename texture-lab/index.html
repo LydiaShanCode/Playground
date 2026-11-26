@@ -670,7 +670,7 @@ let texJob = 0;
 async function ensureTex() {
   const job = ++texJob, order = [idx, idx + 1, idx - 1, idx + 2, idx - 2, ...items.keys()].filter((v, k, a) => v >= 0 && v < items.length && a.indexOf(v) === k);
   for (const i of order) { if (job !== texJob) return; const it = items[i]; const tint = tintOf(it); if (!it || !it.url || (!tint && !it.sample) || cache.get(it.id)?.tex?.[tint || 'orig']) continue;
-    await new Promise(r => setTimeout(r, 0)); try { await texUrl(it, tint); } catch { continue; } if (job === texJob) { layout(); if (view === 'grid') buildGrid(); } }
+    await new Promise(r => setTimeout(r, 0)); try { await texUrl(it, tint); } catch { continue; } if (job === texJob) { layout(); if (view === 'grid') buildGrid(); if (typeof refreshStripImages === 'function') refreshStripImages(); } }
 }
 
 /* ================= drawn objects ================= */
@@ -967,12 +967,15 @@ $('file').addEventListener('change', async e => {
 });
 const strip = $('strip');
 function buildStrip() {
-  strip.innerHTML = items.length ? items.map((it, i) => `<button data-i="${i}" class="${i === idx ? 'cur' : ''}" style="${it.url ? `background-image:url(${it.url})` : ''}" aria-label="${esc(it.name)}"></button>`).join('')
+  strip.innerHTML = items.length ? items.map((it, i) => `<button data-i="${i}" class="${i === idx ? 'cur' : ''}" style="${stripUrl(it) ? `background-image:url(${stripUrl(it)})` : ''}" aria-label="${esc(it.name)}"></button>`).join('')
     : '<span class="none">Your captures will line up here</span>';
   const centre = () => { const b = strip.children[idx]; if (b && b.dataset.i) strip.scrollLeft = b.offsetLeft + 24 - strip.clientWidth / 2; slant(); };
   centre(); requestAnimationFrame(() => requestAnimationFrame(centre)); setTimeout(centre, 700); setStill();
 }
-function setStill() { const cur = items[idx]; $('still').style.backgroundImage = cur?.url ? `url(${cur.url})` : ''; }
+function setStill() { const cur = items[idx], u = cur && stripUrl(cur); $('still').style.backgroundImage = u ? `url(${u})` : ''; }
+// the strip shows each texture in its own colour, same as the gallery cards
+const stripUrl = it => texOf(it).url || it.url;
+function refreshStripImages() { for (const b of strip.querySelectorAll('button')) { const it = items[+b.dataset.i], u = it && stripUrl(it); if (u && b.dataset.u !== u) { b.style.backgroundImage = `url(${u})`; b.dataset.u = u; } } setStill(); }
 // cover-flow: the centred frame faces you, frames to the sides turn away and crowd in
 // frames sit on a drum: the selected one faces you at the front, the rest follow the curve round each side
 const DRUM_STEP = 24 * Math.PI / 180, DRUM_R = 52 / DRUM_STEP;      // 24° between frames; radius so spacing at the front matches the layout
