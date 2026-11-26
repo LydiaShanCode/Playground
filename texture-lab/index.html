@@ -445,7 +445,10 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const toast = (m, act, fn) => { const t = $('toast'); t.textContent = m; t.classList.toggle('act', !!act);
   if (act) { const b = document.createElement('button'); b.textContent = act; b.onclick = () => { t.classList.remove('show'); fn(); }; t.append(b); }
   t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), act ? 5000 : 2600); };
-const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'];
+// muted palette: every colour is pulled ~40% toward its own grey (same lightness, less saturation)
+const desat = (hex, amt = .4) => { const n = parseInt(hex.slice(1), 16), c = [(n >> 16) & 255, (n >> 8) & 255, n & 255], l = .299 * c[0] + .587 * c[1] + .114 * c[2];
+  return '#' + c.map(v => Math.round(v + (l - v) * amt).toString(16).padStart(2, '0')).join(''); };
+const TINTS = [null, '#879c66', '#2c4a9a', '#c4623a', '#d1a03c', '#262a31', '#e8e1d3', '#d98f8f', '#6f4e7c', '#3f6f6a'].map(h => h && desat(h));
 /* ---------- aura / mesh gradients: soft lumpy blobs, heavily blurred, with film grain ---------- */
 // each blob: [colour, x, y, radius, wobble seed]; positions/radii are fractions of the square
 const GRADS = {
@@ -455,6 +458,7 @@ const GRADS = {
   peach: { name: 'Peach', base: '#fbefe8', blobs: [['#f4a08a', .3, .3, .3, 1], ['#f7c7a3', .72, .6, .34, 2], ['#e6b2dd', .25, .82, .26, 3], ['#fbd9c4', .8, .15, .2, 4]] },
   mint: { name: 'Mint', base: '#eff7f1', blobs: [['#9dd8bf', .35, .35, .34, 1], ['#c9e6a0', .72, .72, .3, 2], ['#a9c9f1', .8, .25, .22, 3], ['#e6f2d6', .3, .85, .22, 4]] },
 };
+for (const g of Object.values(GRADS)) { g.base = desat(g.base); for (const b of g.blobs) b[0] = desat(b[0]); }
 const gradCache = {};
 function gradPixels(key) {
   if (gradCache[key]) return gradCache[key];
