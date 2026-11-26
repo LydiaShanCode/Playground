@@ -500,10 +500,10 @@ const TKEY = 'texture-lab.tints.v3';
 let tintMap = {}; try { tintMap = JSON.parse(localStorage.getItem(TKEY) || '{}') || {}; } catch {}
 const CHOICES = () => TINTS.filter(Boolean).concat(Object.keys(GRADS).map(k => 'g:' + k));
 // fixed starting colours for some samples (applied once; you can still change them)
-const DEFAULT_TINTS = { n0: 'g:sunrise', n4: 'g:mint', n5: TINTS[2] };   // canvas-weave → orange/white/yellow, dappled-shade → green-blue, halftone → pastel blue
-try { const done = JSON.parse(localStorage.getItem('texture-lab.defaults.v1') || '{}');
+const DEFAULT_TINTS = { n0: TINTS[4], n4: 'g:mint', n5: TINTS[2] };   // canvas-weave → ochre gold, dappled-shade → green-blue, halftone → pastel blue
+try { const done = JSON.parse(localStorage.getItem('texture-lab.defaults.v2') || '{}');
   for (const [k, v] of Object.entries(DEFAULT_TINTS)) if (!done[k]) { tintMap[k] = v; done[k] = 1; }
-  localStorage.setItem('texture-lab.defaults.v1', JSON.stringify(done)); localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch { Object.assign(tintMap, DEFAULT_TINTS); }
+  localStorage.setItem('texture-lab.defaults.v2', JSON.stringify(done)); localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch { Object.assign(tintMap, DEFAULT_TINTS); }
 function tintOf(it) {
   if (!it) return null;
   if (!(it.id in tintMap)) { const c = CHOICES(); tintMap[it.id] = c[Math.floor(Math.random() * c.length)]; try { localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch {} }
