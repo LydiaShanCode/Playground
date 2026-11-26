@@ -542,13 +542,38 @@ function toneOnto(L, base, strength = 1) {
     out[j + 3] = 255; }
   return out;
 }
+// generated surfaces drawn directly at card size (nothing tiled). x,y are in card pixels (600×800 reference).
+// Each returns a raw value; it's then normalised to a gentle contrast with darks softened (real paper is mostly light).
+const CARD_SURF = {
+  'canvas-weave.png': { sd: .09, f: (x, y) => { const p = 4.2, a = x / p, b = y / p, ov = (Math.floor(a) + Math.floor(b)) & 1, th = Math.sin(Math.PI * (b % 1)), tv = Math.sin(Math.PI * (a % 1));
+      return (ov ? th * (.8 + .2 * tv) : tv * (.8 + .2 * th)) * (.9 + .2 * fbm(x / 60, y / 60, 2, 6)) + .15 * (hash2(x | 0, y | 0, 7) - .5); } },
+  'cold-press.png': { sd: .075, f: (x, y) => { const t = fbm(x / 7, y / 7, 3, 11), t2 = fbm(x / 2.6, y / 2.6, 2, 12), big = fbm(x / 90, y / 90, 2, 13);
+      return t * .6 + t2 * .3 + big * .1 + .06 * (hash2(x | 0, y | 0, 14) - .5); } },
+  'granite-speck.png': { sd: .085, f: (x, y) => { const xi = x | 0, yi = y | 0, c = hash2(xi >> 1, yi >> 1, 21), f = hash2(xi, yi, 22), cl = hash2(xi >> 2, yi >> 2, 24);
+      return .55 * c + .25 * fbm(x / 30, y / 30, 2, 23) + (cl > .985 ? -.9 : 0) + (f > .992 ? .7 : 0); } },
+  'dappled-shade.png': { sd: .065, f: (x, y) => { const b = smooth(.3, .78, fbm(x / 210 + .3 * (fbm(x / 400, y / 400, 2, 33) - .5), y / 210, 4, 31));
+      return .8 * b + .2 * (hash2(x | 0, y | 0, 32) - .5) * (.4 + .6 * b); } },
+  'halftone.png': { sd: .07, f: (x, y) => { const p = 5, row = Math.floor(y / p), ox = (row & 1) * p / 2, cx = Math.floor((x - ox) / p) * p + ox + p / 2, cy = row * p + p / 2;
+      const r = 1.1 + .6 * fbm(x / 140, y / 140, 3, 41), d = Math.hypot(x + .5 - cx, y + .5 - cy); return 1 - (1 - smooth(r - .6, r + .6, d)) * .8; } },
+};
+function cardSurface(name, w, h) {
+  const S0 = CARD_SURF[name], k = CW / w, L = new Float32Array(w * h); let m = 0, q = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const v = S0.f(x * k, y * k); L[y * w + x] = v; m += v; }
+  m /= L.length; for (const v of L) q += (v - m) ** 2; const sd = Math.sqrt(q / L.length) + 1e-6;
+  for (let i = 0; i < L.length; i++) { const z = (L[i] - m) / sd * S0.sd; L[i] = clamp01(.5 + (z < 0 ? z * .55 : z)); }
+  return L;
+}
 async function lumFor(it, w, h) {                                   // the light/dark pattern to transfer
   const c = cache.get(it.id) || {}; cache.set(it.id, c); const key = 'L' + w + 'x' + h;
   if (c[key]) return c[key];
+  if (it.sample && CARD_SURF[it.name]) return c[key] = cardSurface(it.name, w, h);
   if (it.sample) {                                                  // generated surfaces tile; lay them across the card at a fine scale
     const ex = await extracted(it), cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d', { willReadFrequently: true });
-    g.fillStyle = g.createPattern(heightCanvas(ex.height), 'repeat'); g.setTransform(.55, 0, 0, .55, 0, 0); g.fillRect(0, 0, w / .55, h / .55);
-    const L = lumOf(g.getImageData(0, 0, w, h).data); for (let i = 0; i < L.length; i++) L[i] = .5 + (L[i] - .5) * 1.25; return c[key] = L;
+    const z = .34 * w / CW;                                           // finer: features about a third the previous size
+    g.fillStyle = g.createPattern(heightCanvas(ex.height), 'repeat'); g.setTransform(z, 0, 0, z, 0, 0); g.fillRect(0, 0, w / z, h / z);
+    const L = lumOf(g.getImageData(0, 0, w, h).data);
+    // real paper/plaster is mostly light: soften the darks much more than the lights
+    for (let i = 0; i < L.length; i++) { const d = L[i] - .5; L[i] = .5 + (d < 0 ? d * .38 : d * .6); } return c[key] = L;
   }
   return c[key] = lumOf(coverDraw(await loadImg(it.url), w, h));
 }
