@@ -18,5 +18,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/texture-lab/camera",
+      "destination": "/texture-lab/index.html"
+    }
   ]
 }
