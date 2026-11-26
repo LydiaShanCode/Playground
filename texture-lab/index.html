@@ -520,7 +520,47 @@ async function extracted(it) {
   if (!c.ex) c.ex = extractFrom(await loadImg(it.url));
   return c.ex;
 }
+/* ---- tone transfer: the photo's own lights and darks, laid onto a colour or gradient ---- */
+const CW = 600, CH = 800;                                          // card render size (3:4)
+const lumOf = d => { const L = new Float32Array(d.length / 4); for (let i = 0; i < L.length; i++) L[i] = (.2126 * d[i * 4] + .7152 * d[i * 4 + 1] + .0722 * d[i * 4 + 2]) / 255; return L; };
+function coverDraw(img, w, h) {                                     // photo scaled to fill w×h, centred, nothing tiled
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, sc = Math.max(w / iw, h / ih);
+  g.imageSmoothingQuality = 'high'; g.drawImage(img, (w - iw * sc) / 2, (h - ih * sc) / 2, iw * sc, ih * sc); return g.getImageData(0, 0, w, h).data;
+}
+function baseAt(hex, w, h) {                                        // solid or gradient, at w×h
+  if (!isGrad(hex)) { const [r, g, b] = hex2rgb(hex), o = new Uint8ClampedArray(w * h * 4); for (let i = 0; i < w * h; i++) { o[i * 4] = r; o[i * 4 + 1] = g; o[i * 4 + 2] = b; o[i * 4 + 3] = 255; } return o; }
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+  g.imageSmoothingQuality = 'high'; g.drawImage(toCanvas(gradPixels(hex.slice(2))), 0, 0, w, h); return g.getImageData(0, 0, w, h).data;
+}
+// every pixel keeps exactly how much lighter or darker it was than the photo's average; that difference is applied to the colour
+function toneOnto(L, base, strength = 1) {
+  let m = 0; for (let i = 0; i < L.length; i++) m += L[i]; m /= L.length; m = Math.min(.9, Math.max(.1, m));
+  const out = new Uint8ClampedArray(base.length);
+  for (let i = 0; i < L.length; i++) { const d = (L[i] - m) * strength, j = i * 4;
+    for (let c = 0; c < 3; c++) { const b = base[j + c]; out[j + c] = d < 0 ? b * (1 + d / m) : b + (255 - b) * (d / (1 - m)); }
+    out[j + 3] = 255; }
+  return out;
+}
+async function lumFor(it, w, h) {                                   // the light/dark pattern to transfer
+  const c = cache.get(it.id) || {}; cache.set(it.id, c); const key = 'L' + w + 'x' + h;
+  if (c[key]) return c[key];
+  if (it.sample) {                                                  // generated surfaces tile; lay them across the card at a fine scale
+    const ex = await extracted(it), cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d', { willReadFrequently: true });
+    g.fillStyle = g.createPattern(heightCanvas(ex.height), 'repeat'); g.setTransform(.55, 0, 0, .55, 0, 0); g.fillRect(0, 0, w / .55, h / .55);
+    const L = lumOf(g.getImageData(0, 0, w, h).data); for (let i = 0; i < L.length; i++) L[i] = .5 + (L[i] - .5) * 1.25; return c[key] = L;
+  }
+  return c[key] = lumOf(coverDraw(await loadImg(it.url), w, h));
+}
 async function texUrl(it, hex) {
+  if (it.kind !== 'glass' && hex) {
+    const c = cache.get(it.id) || {}; cache.set(it.id, c); c.tex = c.tex || {};
+    if (!c.tex[hex]) c.tex[hex] = toCanvas(toneOnto(await lumFor(it, CW, CH), baseAt(hex, CW, CH)), CW, CH).toDataURL('image/jpeg', .9);
+    return c.tex[hex];
+  }
+  return texUrlRelief(it, hex);
+}
+async function texUrlRelief(it, hex) {
   const c = cache.get(it.id) || {}; cache.set(it.id, c); c.tex = c.tex || {}; const k = hex || 'orig';
   if (!c.tex[k]) { const ex = await extracted(it); c.tex[k] = toCanvas(hex ? finish(it, baseFor(hex), ex.height, isGrad(hex) ? .2 : .32 + .2 * (1 - lum(hex)), 3, isGrad(hex) ? 3 : 1) : finish(it, ex.albedo, ex.height, .24, 3)).toDataURL('image/jpeg', .9); }
   return c.tex[k];
@@ -530,7 +570,7 @@ const texOf = it => {
   const tint = tintOf(it);
   if (!it.sample && !tint) return { url: it.url, tiled: false };            // your photo, exactly as captured
   const u = cache.get(it.id)?.tex?.[tint || 'orig'];
-  return u ? { url: u, tiled: it.sample && !isGrad(tint) } : { url: tint ? null : it.url, tiled: false };
+  return u ? { url: u, tiled: it.sample && (!tint || (it.kind === 'glass' && !isGrad(tint))) } : { url: tint ? null : it.url, tiled: false };
 };
 let texJob = 0;
 async function ensureTex() {
@@ -852,19 +892,51 @@ function zip(files) {
   return new Blob([...parts, ...cen, new Uint8Array(e.buffer)], { type: 'application/zip' });
 }
 const bytes = async b => new Uint8Array(await b.arrayBuffer());
+// Build a seamless T×T tile from many overlapping patches taken at random from the whole photo.
+// Patches are feathered and blended with variance-preserving weights, so contrast stays crisp and there's no single repeating block.
+async function organicTile(it, T = 1024) {
+  const img = await loadImg(it.url), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const sc = Math.min(1, 1100 / Math.min(iw, ih)), sw = Math.round(iw * sc), shh = Math.round(ih * sc);
+  const sv = document.createElement('canvas'); sv.width = sw; sv.height = shh; const sg = sv.getContext('2d', { willReadFrequently: true });
+  sg.imageSmoothingQuality = 'high'; sg.drawImage(img, 0, 0, sw, shh); const src = lumOf(sg.getImageData(0, 0, sw, shh).data);
+  let mean = 0; for (const v of src) mean += v; mean /= src.length;
+  const P = Math.min(320, Math.floor(Math.min(sw, shh) * .6)), wgt = new Float32Array(P * P);
+  for (let y = 0; y < P; y++) for (let x = 0; x < P; x++) { const a = Math.sin(Math.PI * (x + .5) / P), b = Math.sin(Math.PI * (y + .5) / P); wgt[y * P + x] = a * b; }
+  const acc = new Float32Array(T * T), w2 = new Float32Array(T * T), rnd = mulberry(it.id.length * 9973 + 7);
+  const step = P * .3;                                                     // dense jittered grid of patch centres → every pixel covered several times
+  for (let gy = 0; gy < T; gy += step) for (let gx = 0; gx < T; gx += step) {
+    const ox = Math.round(gx + (rnd() - .5) * step), oy = Math.round(gy + (rnd() - .5) * step), sx = Math.floor(rnd() * (sw - P)), sy = Math.floor(rnd() * (shh - P));
+    let pm = 0, pw = 0; for (let y = 0; y < P; y += 2) for (let x = 0; x < P; x += 2) { const w = wgt[y * P + x]; pm += w * src[(sy + y) * sw + sx + x]; pw += w; } pm /= pw;   // patch's own average brightness
+    for (let y = 0; y < P; y++) { const ty = ((oy + y) % T + T) % T, so = (sy + y) * sw + sx, to = ty * T;
+      for (let x = 0; x < P; x++) { const w = wgt[y * P + x], tx = ((ox + x) % T + T) % T; acc[to + tx] += w * (src[so + x] - pm); w2[to + tx] += w * w; } }
+    await new Promise(r => setTimeout(r, 0));
+  }
+  const L = new Float32Array(T * T); for (let i = 0; i < T * T; i++) L[i] = clamp01(mean + acc[i] / Math.sqrt(w2[i] + 1e-6));
+  return L;
+}
+const mulberry = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const greyCanvas = (L, w, h) => { const p = new Uint8ClampedArray(w * h * 4); for (let i = 0; i < w * h; i++) { p[i * 4] = p[i * 4 + 1] = p[i * 4 + 2] = L[i] * 255; p[i * 4 + 3] = 255; } return toCanvas(p, w, h); };
 $('dl').addEventListener('click', async () => {
   const it = items[idx], btn = $('dl'); if (!it?.url || btn.classList.contains('busy')) return;
   btn.classList.add('busy');
   try {
-    const tint = tintOf(it), ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), colour = tint ? finish(it, baseFor(tint), ex.height, isGrad(tint) ? .2 : .32, 3) : finish(it, ex.albedo, ex.height, .3, 3);
-    const meta = { name: it.name, captured: new Date(it.date).toISOString(), location: it.coords, tint: tint || 'original', size: S, tileable: !isGrad(tint) };
-    const readme = `# ${base}\n\nTexture pack from Texture Lab. ${S}×${S}px, tiles seamlessly.\n\n- ${base}-height.png: grey relief, 50% grey = flat. Use it to recolour.\n- ${base}-normal.png: normal map (OpenGL, green up) for 3D tools.\n- ${base}-colour.png: the ${tint ? 'tinted' : 'evenly lit'} colour version.\n- ${base}-source.jpg: the photo it came from.\n\n## Figma\nRectangle with your colour fill, then add an Image fill with ${base}-height.png, set to Tile, blend mode Soft light or Overlay.\n\n## CSS\n\`\`\`css\n.surface {\n  background: url("${base}-height.png") 0 0 / 256px, ${tint || '#879c66'};\n  background-blend-mode: soft-light;\n}\n\`\`\`\n`;
+    const tint = tintOf(it), ex = await extracted(it), base = it.name.replace(/\.[^.]+$/, ''), T = 1024;
+    // full card, recoloured, untiled
+    const cardL = await lumFor(it, 1200, 1600), card = tint && it.kind !== 'glass' ? toneOnto(cardL, baseAt(tint, 1200, 1600)) : null;
+    // organic seamless tile (photos) or the generated surface (samples)
+    let tileL; if (it.sample) { const hc = heightCanvas(ex.height), c2 = document.createElement('canvas'); c2.width = c2.height = T; const g2 = c2.getContext('2d', { willReadFrequently: true });
+      g2.fillStyle = g2.createPattern(hc, 'repeat'); g2.fillRect(0, 0, T, T); tileL = lumOf(g2.getImageData(0, 0, T, T).data); } else tileL = await organicTile(it, T);
+    const tileCol = tint && !isGrad(tint) ? toneOnto(tileL, baseAt(tint, T, T)) : null;
+    const meta = { name: it.name, captured: new Date(it.date).toISOString(), location: it.coords, colour: tint || 'original', tile: T, tileable: true };
+    const readme = `# ${base}\n\nTexture pack from Texture Lab.\n\n- ${base}-tile.png: ${T}×${T}, tiles seamlessly. The photo's own light and dark pattern${tileCol ? ' on your colour' : ''}, built from many overlapping patches so the repeat isn't obvious.\n- ${base}-tile-grey.png: the same tile in grey, to lay over any colour.\n${card ? `- ${base}-card.png: the whole photo recoloured, not tiled.\n` : ''}- ${base}-source.jpg: the photo it came from.\n- relief/: optional height and normal maps for 3D tools.\n\n## Figma\nRectangle with your colour fill, add an Image fill with ${base}-tile-grey.png set to Tile, blend mode Luminosity or Overlay.\n\n## CSS\n\`\`\`css\n.surface {\n  background: url("${base}-tile-grey.png") 0 0 / 512px, ${isGrad(tint) || !tint ? '#e9e4dc' : tint};\n  background-blend-mode: luminosity;\n}\n\`\`\`\n`;
     const src = await (await fetch(it.url)).blob();
     const files = [
-      { name: `${base}-height.png`, data: await bytes(await blobOf(heightCanvas(ex.height))) },
-      { name: `${base}-normal.png`, data: await bytes(await blobOf(normalCanvas(ex.height))) },
-      { name: `${base}-colour.png`, data: await bytes(await blobOf(toCanvas(colour))) },
+      { name: `${base}-tile-grey.png`, data: await bytes(await blobOf(greyCanvas(tileL, T, T))) },
+      ...(tileCol ? [{ name: `${base}-tile.png`, data: await bytes(await blobOf(toCanvas(tileCol, T, T))) }] : []),
+      ...(card ? [{ name: `${base}-card.png`, data: await bytes(await blobOf(toCanvas(card, 1200, 1600))) }] : []),
       { name: `${base}-source.jpg`, data: await bytes(src) },
+      { name: `relief/${base}-height.png`, data: await bytes(await blobOf(heightCanvas(ex.height))) },
+      { name: `relief/${base}-normal.png`, data: await bytes(await blobOf(normalCanvas(ex.height))) },
       { name: 'texture.json', data: new TextEncoder().encode(JSON.stringify(meta, null, 2)) },
       { name: 'README.md', data: new TextEncoder().encode(readme) }];
     await save(`${base}-texture-pack.zip`, zip(files));
