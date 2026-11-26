@@ -460,6 +460,7 @@ const GRADS = {
   tide: { name: 'Tide', base: '#f5f7fc', blobs: [['#4d7fd2', .45, .14, .34, 1], ['#5a86d6', .66, .62, .34, 2], ['#8e8ee6', .4, .72, .26, 3], ['#e19ad4', .3, .34, .17, 4], ['#e3a6d6', .6, .86, .17, 5], ['#f6f2fa', .95, .4, .2, 6]] },
   butter: { name: 'Butter', base: '#fdf9ea', blobs: [['#f9eab0', .5, .55, .55, 1], ['#f5dc72', .48, .55, .28, 2]] },
   peach: { name: 'Peach', base: '#fbefe8', blobs: [['#f4a08a', .3, .3, .3, 1], ['#f7c7a3', .72, .6, .34, 2], ['#e6b2dd', .25, .82, .26, 3], ['#fbd9c4', .8, .15, .2, 4]] },
+  sunrise: { name: 'Sunrise', base: '#fffdf8', blobs: [['#f59a4e', .3, .3, .3, 1], ['#f7d35c', .74, .62, .32, 2], ['#ffffff', .62, .2, .2, 3], ['#f8b56a', .22, .84, .24, 4], ['#fbe48a', .82, .12, .18, 5]] },
   mint: { name: 'Mint', base: '#eff7f1', blobs: [['#9dd8bf', .35, .35, .34, 1], ['#c9e6a0', .72, .72, .3, 2], ['#a9c9f1', .8, .25, .22, 3], ['#e6f2d6', .3, .85, .22, 4]] },
 };
 Object.values(GRADS).forEach((g, i) => { const t = [.83, .74, .83, .76, .8][i % 5]; g.base = pastel(g.base, .5, t); for (const b of g.blobs) b[0] = pastel(b[0], .62, t); });
@@ -499,7 +500,7 @@ const TKEY = 'texture-lab.tints.v3';
 let tintMap = {}; try { tintMap = JSON.parse(localStorage.getItem(TKEY) || '{}') || {}; } catch {}
 const CHOICES = () => TINTS.filter(Boolean).concat(Object.keys(GRADS).map(k => 'g:' + k));
 // fixed starting colours for some samples (applied once; you can still change them)
-const DEFAULT_TINTS = { n4: 'g:mint' };   // dappled-shade → green-blue (Mint) gradient
+const DEFAULT_TINTS = { n0: 'g:sunrise', n4: 'g:mint', n5: TINTS[2] };   // canvas-weave → orange/white/yellow, dappled-shade → green-blue, halftone → pastel blue
 try { const done = JSON.parse(localStorage.getItem('texture-lab.defaults.v1') || '{}');
   for (const [k, v] of Object.entries(DEFAULT_TINTS)) if (!done[k]) { tintMap[k] = v; done[k] = 1; }
   localStorage.setItem('texture-lab.defaults.v1', JSON.stringify(done)); localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch { Object.assign(tintMap, DEFAULT_TINTS); }
