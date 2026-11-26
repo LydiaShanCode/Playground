@@ -161,9 +161,11 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .sock::before{content:"";position:absolute;inset:6px;border-radius:50%;background:#2e2e2c;box-shadow:inset 0 2px 3px rgba(0,0,0,.75)}
 .sock .key{left:8px;top:8px}
 .lbl{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.14em;color:#6c6c67;text-align:right;width:56px;text-shadow:0 1px 0 rgba(255,255,255,.6)}
-.strip{position:absolute;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));height:67px;display:flex;align-items:center;gap:4px;padding:0 calc(50% - 24px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:340px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent)}
+.strip{position:absolute;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));height:67px;display:flex;align-items:center;gap:4px;padding:0 calc(50% - 24px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent)}
 .strip::-webkit-scrollbar{display:none}
 .strip button{flex:none;width:48px;height:63px;border-radius:3px;background-size:cover;background-position:center;background-color:#bdbdbb;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;box-shadow:0 2px 4px rgba(0,0,0,.18)}
+.strip button{outline:none;-webkit-tap-highlight-color:transparent}
+.strip button:focus,.strip button:focus-visible{outline:none}
 .strip button.cur{box-shadow:0 0 0 2px #fff,0 3px 8px rgba(0,0,0,.25)}
 .strip .none{flex:none;font-size:12px;color:var(--muted);white-space:nowrap;margin:0 -60px}
 .back{position:absolute;left:18px;top:828px;height:28px;padding:0 10px 0 6px;border-radius:999px;display:flex;align-items:center;gap:2px;font-size:12px;color:#555;background:var(--glass)}
@@ -965,8 +967,8 @@ const strip = $('strip');
 function buildStrip() {
   strip.innerHTML = items.length ? items.map((it, i) => `<button data-i="${i}" class="${i === idx ? 'cur' : ''}" style="${it.url ? `background-image:url(${it.url})` : ''}" aria-label="${esc(it.name)}"></button>`).join('')
     : '<span class="none">Your captures will line up here</span>';
-  const b = strip.children[idx]; if (b && b.dataset.i) strip.scrollLeft = b.offsetLeft + 24 - strip.clientWidth / 2;
-  slant(); setStill();
+  const centre = () => { const b = strip.children[idx]; if (b && b.dataset.i) strip.scrollLeft = b.offsetLeft + 24 - strip.clientWidth / 2; slant(); };
+  centre(); requestAnimationFrame(() => requestAnimationFrame(centre)); setTimeout(centre, 700); setStill();
 }
 function setStill() { const cur = items[idx]; $('still').style.backgroundImage = cur?.url ? `url(${cur.url})` : ''; }
 // cover-flow: the centred frame faces you, frames to the sides turn away and crowd in
@@ -974,9 +976,9 @@ function slant() {
   const mid = strip.scrollLeft + strip.clientWidth / 2; let best = -1, bd = 1e9;
   for (const b of strip.querySelectorAll('button')) {
     const d = (b.offsetLeft + 24 - mid) / 52, a = Math.abs(d), sgn = Math.sign(d);
-    const turn = Math.min(a, 1) * 58, pull = Math.max(0, a - .6) * 14, depth = Math.min(a, 2) * 6;
+    const turn = a <= 1 ? a * 70 : Math.min(88, 70 + (a - 1) * 8 - Math.max(0, a - 2) * 2), pull = Math.max(0, a - .6) * 16, depth = Math.min(a, 3) * 6;   // neighbours 70° outward, then progressively more
     b.style.transformOrigin = sgn > 0 ? '0% 50%' : sgn < 0 ? '100% 50%' : '50% 50%';
-    b.style.transform = `translateX(${-sgn * pull}px) translateZ(${-depth}px) rotateY(${sgn * turn}deg)`;
+    b.style.transform = `translateX(${-sgn * pull}px) perspective(260px) translateZ(${-depth}px) rotateY(${sgn * turn}deg)`;   // each frame seen head-on, so the turn reads the same everywhere
     b.style.opacity = a < .5 ? 1 : Math.max(.35, 1 - a * .16); b.style.zIndex = String(100 - Math.round(a * 10));
     if (a < bd) { bd = a; best = +b.dataset.i; }
   }
