@@ -555,9 +555,12 @@ const DEFAULT_TINTS = { n0: TINTS[4], n1: 'g:tide', n2: TINTS[9], n3: TINTS[5], 
 try { const done = JSON.parse(localStorage.getItem('texture-lab.defaults.v6') || '{}');
   for (const [k, v] of Object.entries(DEFAULT_TINTS)) if (!done[k]) { tintMap[k] = v; done[k] = 1; }
   localStorage.setItem('texture-lab.defaults.v6', JSON.stringify(done)); localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch { Object.assign(tintMap, DEFAULT_TINTS); }
+// one-time: photos you'd already taken go back to their own colours
+try { if (!localStorage.getItem('texture-lab.photos-orig.v1')) { for (const k of Object.keys(tintMap)) if (!/^n\d+$/.test(k)) tintMap[k] = null;
+  localStorage.setItem(TKEY, JSON.stringify(tintMap)); localStorage.setItem('texture-lab.photos-orig.v1', '1'); } } catch {}
 function tintOf(it) {
   if (!it) return null;
-  if (!(it.id in tintMap)) { const c = CHOICES(); tintMap[it.id] = c[Math.floor(Math.random() * c.length)]; try { localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch {} }
+  if (!(it.id in tintMap)) { const c = CHOICES(); tintMap[it.id] = it.sample ? c[Math.floor(Math.random() * c.length)] : null; /* your photos start as shot */ try { localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch {} }
   return tintMap[it.id];
 }
 function setTint(it, t) { tintMap[it.id] = t; try { localStorage.setItem(TKEY, JSON.stringify(tintMap)); } catch {} }
