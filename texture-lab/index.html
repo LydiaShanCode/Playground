@@ -147,7 +147,11 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .full .vthumb{display:block;position:absolute;left:50%;bottom:16px;width:44px;height:58px;margin-left:-22px;z-index:4;border-radius:4px;border:1.5px solid rgba(255,255,255,.9);
   background:#2a2a2a center/cover no-repeat;box-shadow:0 2px 6px rgba(0,0,0,.5),3px -3px 0 -1.5px rgba(255,255,255,.35),6px -6px 0 -3px rgba(255,255,255,.18);-webkit-tap-highlight-color:transparent}
 .full .vthumb:active{transform:scale(.94)}
-.full .body{bottom:calc(8px + env(safe-area-inset-bottom))}
+.full .body{left:0;right:0;top:0;bottom:0;border-radius:0;box-shadow:none}
+.full .body::before,.full .body::after{display:none}
+.full .frame{top:calc(16px + var(--safe-t,0px));bottom:calc(269px + env(safe-area-inset-bottom))}
+.full .body > :not(.frame):not(.grain){margin-bottom:env(safe-area-inset-bottom)}
+body.full #app{border-radius:0}
 .full .strip{display:none}
 .lcd .startbtn{position:absolute;inset:0;z-index:3}
 .brand span{display:inline-block;font:24px/1 system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:grayscale(1) contrast(.6) brightness(.92) drop-shadow(0 1px 0 rgba(255,255,255,.9)) drop-shadow(0 -1px 0 rgba(0,0,0,.3));opacity:.75}
