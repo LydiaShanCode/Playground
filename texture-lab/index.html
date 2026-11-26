@@ -465,9 +465,51 @@ const GRADS = {
   mint: { name: 'Mint', base: '#eff7f1', blobs: [['#9dd8bf', .35, .35, .34, 1], ['#c9e6a0', .72, .72, .3, 2], ['#a9c9f1', .8, .25, .22, 3], ['#e6f2d6', .3, .85, .22, 4]] },
 };
 Object.values(GRADS).forEach((g, i) => { const t = [.83, .74, .83, .76, .8][i % 5]; g.base = pastel(g.base, .5, t); for (const b of g.blobs) b[0] = pastel(b[0], .62, t); });
+/* atmospheric gradients: soft lit forms floating in pale haze (each shape shaded for volume, blurred by its own depth, fine dust) */
+// blob: [colour, x, y, radius, seed, depth 0 near … 1 far]
+Object.assign(GRADS, {
+  mist:     { name: 'Mist',     atmo: true, base: '#f3f3f4', blobs: [['#b4bcd6', .18, .2, .3, 1, .55], ['#aab4c3', .2, .62, .26, 2, .35], ['#d8c6c9', .52, .66, .2, 3, .7], ['#b3cbcb', .62, .42, .24, 4, .5], ['#cbc6d8', .8, .2, .26, 5, .25], ['#e2d8cc', .84, .7, .22, 6, .8], ['#bccbc2', .3, .95, .18, 7, .6]] },
+  fogrose:  { name: 'Fog rose', atmo: true, base: '#f5f2f1', blobs: [['#d9c3c7', .3, .3, .3, 1, .4], ['#cdc8d7', .72, .28, .26, 2, .65], ['#e6d8cb', .6, .72, .3, 3, .3], ['#c8d1d6', .2, .78, .22, 4, .75], ['#dccbd3', .85, .85, .18, 5, .5]] },
+  seaglass: { name: 'Sea glass', atmo: true, base: '#f2f5f4', blobs: [['#b4cfcb', .28, .3, .3, 1, .35], ['#c0c9dc', .74, .36, .26, 2, .6], ['#d3dfd6', .5, .75, .3, 3, .45], ['#a9bcc3', .15, .8, .2, 4, .7], ['#dfe6e2', .85, .9, .2, 5, .25]] },
+  duskhaze: { name: 'Dusk haze', atmo: true, base: '#f1f0f4', blobs: [['#c1bdd6', .25, .25, .3, 1, .45], ['#d8c4cc', .7, .4, .27, 2, .3], ['#b4bdd0', .4, .75, .28, 3, .6], ['#e1d8cd', .82, .82, .2, 4, .75], ['#c9c4dd', .88, .12, .18, 5, .55]] },
+});
 const gradCache = {};
+function atmoPixels(G) {
+  const n = 192, [br0, bg0, bb0] = hex2rgb(G.base), acc = new Float32Array(n * n * 3);
+  for (let i = 0; i < n * n; i++) { acc[i * 3] = br0; acc[i * 3 + 1] = bg0; acc[i * 3 + 2] = bb0; }
+  // far shapes first so near ones sit on top
+  const order = G.blobs.slice().sort((a, b) => b[5] - a[5]);
+  for (const [col, bx, by, br, sd, depth] of order) {
+    const c = document.createElement('canvas'); c.width = c.height = n; const g = c.getContext('2d', { willReadFrequently: true });
+    const [r, gg, b] = hex2rgb(col), cx = bx * n, cy = by * n, R = br * n;
+    // volume: darker toward the lower-right edge, a soft lit side upper-left
+    const grd = g.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx + R * .15, cy + R * .2, R * 1.15);
+    grd.addColorStop(0, `rgba(${Math.min(255, r + 26)},${Math.min(255, gg + 26)},${Math.min(255, b + 26)},.9)`);
+    grd.addColorStop(.55, `rgba(${r},${gg},${b},.95)`); grd.addColorStop(1, `rgba(${r * .9 | 0},${gg * .9 | 0},${b * .92 | 0},1)`);
+    g.fillStyle = grd; g.beginPath();
+    for (let k = 0; k <= 72; k++) { const a = k / 72 * Math.PI * 2, rr = R * (1 + .16 * Math.sin(2 * a + sd) + .1 * Math.sin(3 * a + sd * 2) + .05 * Math.sin(5 * a + sd * 3));
+      const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr * 1.08; k ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.fill();
+    const d = g.getImageData(0, 0, n, n).data, rad = Math.round(3 + depth * 13);   // farther = softer
+    const pa = new Float32Array(n * n), pr = new Float32Array(n * n), pg = new Float32Array(n * n), pb = new Float32Array(n * n);
+    for (let i = 0; i < n * n; i++) { const al = d[i * 4 + 3] / 255; pa[i] = al; pr[i] = d[i * 4] * al; pg[i] = d[i * 4 + 1] * al; pb[i] = d[i * 4 + 2] * al; }
+    const A = blur(pa, n, n, rad, 3), Rr = blur(pr, n, n, rad, 3), Gg = blur(pg, n, n, rad, 3), Bb = blur(pb, n, n, rad, 3), op = .55 + (1 - depth) * .3;
+    for (let i = 0; i < n * n; i++) { const al = A[i] * op; if (al < .002) continue; const inv = 1 / Math.max(1e-4, A[i]);
+      acc[i * 3] = acc[i * 3] * (1 - al) + Rr[i] * inv * al; acc[i * 3 + 1] = acc[i * 3 + 1] * (1 - al) + Gg[i] * inv * al; acc[i * 3 + 2] = acc[i * 3 + 2] * (1 - al) + Bb[i] * inv * al; }
+  }
+  const sm = document.createElement('canvas'); sm.width = sm.height = n; const sg = sm.getContext('2d'), si = sg.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) { si.data[i * 4] = acc[i * 3]; si.data[i * 4 + 1] = acc[i * 3 + 1]; si.data[i * 4 + 2] = acc[i * 3 + 2]; si.data[i * 4 + 3] = 255; }
+  sg.putImageData(si, 0, 0);
+  const big = document.createElement('canvas'); big.width = big.height = S; const bg = big.getContext('2d', { willReadFrequently: true });
+  bg.imageSmoothingQuality = 'high'; bg.drawImage(sm, 0, 0, S, S);
+  const px = bg.getImageData(0, 0, S, S).data;
+  for (let i = 0; i < S * S; i++) { const x = i % S, y = (i / S) | 0, gr = (hash2(x, y, 91) - .5) * 9, dust = hash2(x >> 1, y >> 1, 92) > .9993 ? -38 : 0;
+    px[i * 4] += gr + dust; px[i * 4 + 1] += gr + dust; px[i * 4 + 2] += gr + dust; }      // whisper of grain + a few dust specks
+  return new Uint8ClampedArray(px);
+}
 function gradPixels(key) {
   if (gradCache[key]) return gradCache[key];
+  if (GRADS[key].atmo) return gradCache[key] = atmoPixels(GRADS[key]);
   const G = GRADS[key], n = 128, c = document.createElement('canvas'); c.width = c.height = n; const g = c.getContext('2d');
   g.fillStyle = G.base; g.fillRect(0, 0, n, n);
   for (const [col, bx, by, br, sd] of G.blobs) {            // organic outline: radius wobbles with angle
@@ -746,7 +788,7 @@ function showInfo() {
 function go(i) { const n = Math.max(0, Math.min(items.length - 1, i)); roll.classList.remove('dragging'); if (n === idx) { layout(); return; } idx = n; layout(); ensureTex(); }
 roll.addEventListener('click', e => { const el = e.target.closest('.it'); if (!el || drag.moved) return; const i = +el.dataset.i; if (i !== idx) go(i); else cycleMode(); });
 // drag / swipe: the roll follows the finger 1:1, then snaps to the nearest card (a flick carries to the next one)
-const drag = { x: 0, on: false, moved: false, start: 0, vx: 0, lx: 0, lt: 0, id: null };
+const drag = { x: 0, y: 0, on: false, moved: false, lock: null, start: 0, vx: 0, lx: 0, lt: 0, id: null };
 const stepPx = () => (GEOM[mode][0] + 20) * scale;
 function dragTo(p) {
   const max = items.length - 1, over = p < 0 ? p : p > max ? p - max : 0;
@@ -755,25 +797,34 @@ function dragTo(p) {
   if (n !== idx) idx = n;
   layout();
 }
-roll.addEventListener('pointerdown', e => {
-  if (!items.length) return;
-  drag.on = true; drag.moved = false; drag.x = drag.lx = e.clientX; drag.lt = performance.now(); drag.vx = 0; drag.start = idx; drag.id = e.pointerId;
-});
-roll.addEventListener('pointermove', e => {
-  if (!drag.on || e.pointerId !== drag.id) return;
-  const dx = e.clientX - drag.x;
-  if (!drag.moved && Math.abs(dx) > 6) { drag.moved = true; roll.classList.add('dragging'); try { roll.setPointerCapture(e.pointerId); } catch {} }
-  if (!drag.moved) return;
-  const t = performance.now(), dt = Math.max(1, t - drag.lt); drag.vx = .8 * ((e.clientX - drag.lx) / dt) + .2 * drag.vx; drag.lx = e.clientX; drag.lt = t;
+// one gesture engine for mouse/pen (pointer events) and fingers (touch events, which iOS Safari can't steal mid-swipe)
+function gStart(x, y) { if (!items.length) return; drag.on = true; drag.moved = false; drag.lock = null; drag.x = drag.lx = x; drag.y = y; drag.lt = performance.now(); drag.vx = 0; drag.start = idx; }
+function gMove(x, y, ev) {
+  if (!drag.on) return;
+  const dx = x - drag.x, dy = y - drag.y;
+  if (!drag.lock && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) drag.lock = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+  if (drag.lock !== 'x') return;
+  if (ev && ev.cancelable) ev.preventDefault();
+  if (!drag.moved) { drag.moved = true; roll.classList.add('dragging'); }
+  const t = performance.now(), dt = Math.max(1, t - drag.lt); drag.vx = .8 * ((x - drag.lx) / dt) + .2 * drag.vx; drag.lx = x; drag.lt = t;
   dragTo(drag.start - dx / stepPx());
-});
+}
+roll.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') return; drag.id = e.pointerId; gStart(e.clientX, e.clientY); });
+roll.addEventListener('pointermove', e => { if (e.pointerType === 'touch' || e.pointerId !== drag.id) return; if (drag.moved) { try { roll.setPointerCapture(e.pointerId); } catch {} } gMove(e.clientX, e.clientY); });
+roll.addEventListener('touchstart', e => { const t = e.touches[0]; if (t && e.touches.length === 1) gStart(t.clientX, t.clientY); }, { passive: true });
+roll.addEventListener('touchmove', e => { const t = e.touches[0]; if (t) gMove(t.clientX, t.clientY, e); }, { passive: false });
 function endDrag() {
   if (!drag.on) return; drag.on = false;
   if (drag.moved) { const fling = -drag.vx * 180 / stepPx(); let target = Math.round(pos + Math.max(-.6, Math.min(.6, fling)));
     target = Math.max(0, Math.min(items.length - 1, target)); roll.classList.remove('dragging'); idx = target; pos = target; layout(); ensureTex(); }
+  else if (roll.classList.contains('dragging')) { roll.classList.remove('dragging'); layout(); }
   setTimeout(() => drag.moved = false, 0);
 }
-roll.addEventListener('pointerup', endDrag); roll.addEventListener('pointercancel', endDrag); roll.addEventListener('lostpointercapture', endDrag);
+roll.addEventListener('pointerup', e => { if (e.pointerType !== 'touch') endDrag(); });
+roll.addEventListener('pointercancel', e => { if (e.pointerType !== 'touch') endDrag(); });
+roll.addEventListener('touchend', endDrag); roll.addEventListener('touchcancel', endDrag);
+// safety net: never leave the roll stuck between cards
+document.addEventListener('visibilitychange', () => { if (document.hidden) { drag.on = true; endDrag(); } });
 // trackpad: two-finger horizontal scroll follows continuously, then snaps
 let wheelT = 0;
 roll.addEventListener('wheel', e => {
