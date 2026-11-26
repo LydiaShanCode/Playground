@@ -977,7 +977,7 @@ function slant() {
   const mid = strip.scrollLeft + strip.clientWidth / 2; let best = -1, bd = 1e9;
   for (const b of strip.querySelectorAll('button')) {
     const d = (b.offsetLeft + 24 - mid) / 52, a = Math.abs(d), sgn = Math.sign(d);
-    const turn = a <= 1 ? a * 70 : Math.min(88, 70 + (a - 1) * 8 - Math.max(0, a - 2) * 2), pull = Math.max(0, a - .6) * 16, depth = Math.min(a, 3) * 6;   // neighbours 70° outward, then progressively more
+    const turn = a <= 1 ? a * 35 : Math.min(70, 35 + (a - 1) * 10), pull = Math.max(0, a - .6) * 8, depth = Math.min(a, 3) * 6;   // neighbours ~35° outward, each further frame ~10° more
     b.style.transformOrigin = sgn > 0 ? '0% 50%' : sgn < 0 ? '100% 50%' : '50% 50%';
     b.style.transform = `translateX(${-sgn * pull}px) perspective(260px) translateZ(${-depth}px) rotateY(${sgn * turn}deg)`;   // each frame seen head-on, so the turn reads the same everywhere
     b.style.opacity = a < .5 ? 1 : Math.max(.35, 1 - a * .16); b.style.zIndex = String(100 - Math.round(a * 10));
