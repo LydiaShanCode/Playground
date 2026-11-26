@@ -957,7 +957,33 @@ async function snap() {
     const d = g.getImageData(0, 0, 16, 16).data; let sum = 0; for (let i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] + d[i + 2];
     if (sum / (16 * 16 * 3) < 6) { toast('Camera isn’t ready yet. Try again in a second.'); return; } }
   const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
-  await addCapture(frameToUrl(video, video.videoWidth, video.videoHeight));
+  const lcdR = $('lcd').getBoundingClientRect(), url = frameToUrl(video, video.videoWidth, video.videoHeight);
+  await addCapture(url);
+  flyToStrip(url, lcdR);
+}
+// the captured photo freezes on the screen, then drops out of the camera into the front of the roll
+function flyToStrip(url, from) {
+  const app = $('app'), A = app.getBoundingClientRect(), rel = r => ({ x: (r.left - A.left) / scale, y: (r.top - A.top) / scale, w: r.width / scale, h: r.height / scale });
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fl = document.createElement('div'), a = rel(from);
+  Object.assign(fl.style, { position: 'absolute', left: a.x + 'px', top: a.y + 'px', width: a.w + 'px', height: a.h + 'px', zIndex: 60, pointerEvents: 'none',
+    background: `#111 center/cover url(${url})`, borderRadius: '3px', boxShadow: '0 10px 24px -8px rgba(0,0,0,.45)', willChange: 'left,top,width,height,opacity' });
+  app.appendChild(fl);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const tb = strip.querySelector('button.cur') || strip.children[idx];
+    if (!tb || !tb.dataset) { fl.remove(); return; }
+    tb.style.visibility = 'hidden';
+    const t = rel(tb.getBoundingClientRect()), body = rel($('camBody').getBoundingClientRect());
+    const midY = body.y + body.h - t.h * .2;                          // passes out through the bottom edge of the camera
+    const anim = fl.animate([
+      { left: a.x + 'px', top: a.y + 'px', width: a.w + 'px', height: a.h + 'px', opacity: 1, borderRadius: '3px', offset: 0 },
+      { left: a.x + 'px', top: a.y + 'px', width: a.w + 'px', height: a.h + 'px', opacity: 1, borderRadius: '3px', offset: .24 },     // hold the shot
+      { left: t.x + t.w / 2 - t.w * .8 + 'px', top: midY - t.h * .8 + 'px', width: t.w * 1.6 + 'px', height: t.h * 1.6 + 'px', opacity: .85, borderRadius: '5px', offset: .72 },
+      { left: t.x + 'px', top: t.y + 'px', width: t.w + 'px', height: t.h + 'px', opacity: 1, borderRadius: '3px', offset: 1 }],
+      { duration: reduce ? 1 : 620, easing: 'cubic-bezier(.55,0,.25,1)', fill: 'forwards' });
+    anim.onfinish = () => { fl.remove(); tb.style.visibility = '';
+      if (!reduce) tb.animate([{ transform: tb.style.transform + ' scale(.9)' }, { transform: tb.style.transform + ' scale(1.06)' }, { transform: tb.style.transform }], { duration: 220, easing: 'ease-out' }); };
+  }));
 }
 $('file').addEventListener('change', async e => {
   const file = e.target.files[0]; e.target.value = ''; if (!file || !file.type.startsWith('image/')) return;
