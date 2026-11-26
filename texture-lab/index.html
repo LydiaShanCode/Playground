@@ -164,6 +164,7 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .lbl{position:absolute;font:600 9.5px/1 Geist,sans-serif;letter-spacing:.14em;color:#6c6c67;text-align:right;width:56px;text-shadow:0 1px 0 rgba(255,255,255,.6)}
 .strip{position:absolute;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));height:67px;display:flex;align-items:center;gap:4px;padding:0 calc(50% - 24px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;perspective:520px;perspective-origin:50% 50%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent);mask-image:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent)}
 .strip::-webkit-scrollbar{display:none}
+.strip{cursor:grab;touch-action:none}
 .strip button{flex:none;width:48px;height:63px;border-radius:3px;background-size:cover;background-position:center;background-color:#bdbdbb;scroll-snap-align:center;transform-style:preserve-3d;will-change:transform;box-shadow:0 2px 4px rgba(0,0,0,.18)}
 .strip button{outline:none;-webkit-tap-highlight-color:transparent}
 .strip button:focus,.strip button:focus-visible{outline:none}
@@ -993,7 +994,34 @@ strip.addEventListener('scroll', () => {
   if (!stripRaf) stripRaf = requestAnimationFrame(() => { stripRaf = 0; slant(); });
   clearTimeout(stripEnd); stripEnd = setTimeout(() => { const c = slant(); if (c >= 0 && c !== idx) { idx = c; for (const b of strip.children) b.classList.toggle('cur', +b.dataset.i === idx); setStill(); } }, 110);
 }, { passive: true });
+// mouse / pen: drag the roll directly (touch already scrolls natively); scroll wheel rolls it too
+{
+  const sd = { on: false, x: 0, sl: 0, _m: false, id: null, get moved() { return this._m; }, set moved(v) { this._m = v; window.__stripMoved = v; } };
+  strip.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') return; sd.on = true; sd.moved = false; sd.x = e.clientX; sd.sl = strip.scrollLeft; sd.id = e.pointerId; });
+  strip.addEventListener('pointermove', e => {
+    if (!sd.on || e.pointerId !== sd.id) return; const dx = (e.clientX - sd.x) / scale;
+    if (!sd.moved && Math.abs(dx) > 4) { sd.moved = true; strip.style.scrollSnapType = 'none'; strip.style.cursor = 'grabbing'; try { strip.setPointerCapture(e.pointerId); } catch {} }
+    if (sd.moved) strip.scrollLeft = sd.sl - dx;
+  });
+  const end = () => { if (!sd.on) return; sd.on = false; strip.style.cursor = '';
+    if (sd.moved) { const c = slant(); strip.style.scrollSnapType = ''; const b = strip.children[c]; if (b) strip.scrollTo({ left: b.offsetLeft + 24 - strip.clientWidth / 2, behavior: 'smooth' });
+      strip.addEventListener('click', ev => { ev.stopPropagation(); ev.preventDefault(); }, { capture: true, once: true }); setTimeout(() => sd.moved = false, 0); } };
+  strip.addEventListener('pointerup', end); strip.addEventListener('pointercancel', end);
+  // fingers: same follow-then-snap behaviour, handled directly so iOS can't swallow it
+  const td = { on: false, x: 0, y: 0, sl: 0, lock: null };
+  strip.addEventListener('touchstart', e => { const t = e.touches[0]; if (!t || e.touches.length > 1) return; td.on = true; td.lock = null; td.x = t.clientX; td.y = t.clientY; td.sl = strip.scrollLeft; }, { passive: true });
+  strip.addEventListener('touchmove', e => {
+    if (!td.on) return; const t = e.touches[0], dx = t.clientX - td.x, dy = t.clientY - td.y;
+    if (!td.lock && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) { td.lock = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y'; if (td.lock === 'x') strip.style.scrollSnapType = 'none'; }
+    if (td.lock !== 'x') return; if (e.cancelable) e.preventDefault(); sd.moved = true; strip.scrollLeft = td.sl - dx / scale;
+  }, { passive: false });
+  const tend = () => { if (!td.on) return; td.on = false; if (td.lock === 'x') { const c = slant(); strip.style.scrollSnapType = ''; const b = strip.children[c];
+    if (b) strip.scrollTo({ left: b.offsetLeft + 24 - strip.clientWidth / 2, behavior: 'smooth' }); setTimeout(() => sd.moved = false, 50); } };
+  strip.addEventListener('touchend', tend); strip.addEventListener('touchcancel', tend);
+  strip.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); strip.scrollLeft += e.deltaY; } }, { passive: false });
+}
 strip.addEventListener('click', e => {
+  if (window.__stripMoved) return;
   const b = e.target.closest('button'); if (!b) return; const i = +b.dataset.i;
   if (i === idx) { showScreen('gallery'); return; }
   strip.scrollTo({ left: b.offsetLeft + 24 - strip.clientWidth / 2, behavior: 'smooth' });
