@@ -157,6 +157,15 @@ button:focus-visible{outline:2px solid #2b5bd7;outline-offset:2px}
 .full .frame{top:calc(16px + var(--safe-t,0px));bottom:calc(269px + env(safe-area-inset-bottom))}
 .full .body > :not(.frame):not(.grain){margin-bottom:env(safe-area-inset-bottom)}
 body.full #app{border-radius:0}
+/* 3D camera version (?cam3d): a solid object floating on a dark backdrop, 20px in from the edges, turning with the phone */
+.cam3d #app{background:radial-gradient(110% 70% at 50% 38%,#2b2b2a 0,#121212 62%,#070707 100%)}
+.cam3d #camera{background:transparent}
+.cam3d .body{left:20px;right:20px;top:calc(20px + var(--safe-t,0px));bottom:calc(20px + env(safe-area-inset-bottom));border-radius:40px;
+  transform:perspective(1500px) rotateX(calc(var(--ly,0) * -7deg)) rotateY(calc(var(--lx,0) * 9deg));
+  box-shadow:calc(var(--lx,0) * -0.75px) calc(0.95px + var(--ly,0) * 0.55px) 0 #c4c4c0,calc(var(--lx,0) * -1.50px) calc(1.90px + var(--ly,0) * 1.10px) 0 #bdbdb9,calc(var(--lx,0) * -2.25px) calc(2.85px + var(--ly,0) * 1.65px) 0 #b6b6b2,calc(var(--lx,0) * -3.00px) calc(3.80px + var(--ly,0) * 2.20px) 0 #afafab,calc(var(--lx,0) * -3.75px) calc(4.75px + var(--ly,0) * 2.75px) 0 #a8a8a4,calc(var(--lx,0) * -4.50px) calc(5.70px + var(--ly,0) * 3.30px) 0 #a1a19d,calc(var(--lx,0) * -5.25px) calc(6.65px + var(--ly,0) * 3.85px) 0 #9a9a96,calc(var(--lx,0) * -6.00px) calc(7.60px + var(--ly,0) * 4.40px) 0 #93938f,calc(var(--lx,0) * -6.75px) calc(8.55px + var(--ly,0) * 4.95px) 0 #8c8c88,calc(var(--lx,0) * -7.50px) calc(9.50px + var(--ly,0) * 5.50px) 0 #858581,calc(var(--lx,0) * -8.25px) calc(10.45px + var(--ly,0) * 6.05px) 0 #7e7e7a,calc(var(--lx,0) * -9.00px) calc(11.40px + var(--ly,0) * 6.60px) 0 #777773,calc(var(--lx,0) * -9.75px) calc(12.35px + var(--ly,0) * 7.15px) 0 #70706c,calc(var(--lx,0) * -10.50px) calc(13.30px + var(--ly,0) * 7.70px) 0 #696965,calc(var(--lx,0) * -14px) calc(34px + var(--ly,0) * 10px) 40px rgba(0,0,0,.65),0 10px 18px rgba(0,0,0,.45)}
+.cam3d .body::before,.cam3d .body::after{display:block}
+.cam3d .frame{top:16px}
+
 .full .strip{display:none}
 .lcd .startbtn{position:absolute;inset:0;z-index:3}
 .brand span{display:inline-block;font:24px/1 system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;filter:grayscale(1) contrast(.6) brightness(.92) drop-shadow(0 1px 0 rgba(255,255,255,.9)) drop-shadow(0 -1px 0 rgba(0,0,0,.3));opacity:.75}
@@ -1200,8 +1209,9 @@ function fit() {
 window.visualViewport?.addEventListener('resize', fit);
 addEventListener('resize', fit); fit();
 
-const FULL = /\/camera\/?$/.test(location.pathname) || /[?&]camera\b/.test(location.search);
-document.body.classList.toggle('full', FULL);
+const CAM3D = /[?&]cam3d\b/.test(location.search);
+const FULL = CAM3D || /\/camera\/?$/.test(location.pathname) || /[?&]camera\b/.test(location.search);
+document.body.classList.toggle('full', FULL); document.body.classList.toggle('cam3d', CAM3D);
 $('vthumb').addEventListener('click', e => { e.stopPropagation(); SFX.key(); showScreen('gallery'); });
 $('vwin').addEventListener('pointerdown', () => SFX.key());
 $('vwin').addEventListener('click', () => showScreen('gallery'));
