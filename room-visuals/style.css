@@ -1,0 +1,52 @@
+:root { color-scheme: dark; --ink: #f2f0ea; --muted: #9c988f; --line: rgba(255,255,255,.14); --glass: rgba(10,10,12,.62); }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; color: var(--ink); font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, sans-serif; overflow: hidden; }
+canvas { position: fixed; inset: 0; display: block; }
+
+.panel { position: fixed; inset: 0; margin: auto; width: min(520px, calc(100% - 32px)); height: fit-content; max-height: calc(100% - 32px); overflow: auto;
+  padding: 28px; border: 1px solid var(--line); border-radius: 18px; background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.panel h1 { margin: 0 0 6px; font-size: 32px; letter-spacing: -.02em; line-height: 1.1; }
+.lede { margin: 0 0 20px; color: var(--muted); }
+button, .btn { display: block; width: 100%; margin: 0 0 10px; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line);
+  background: rgba(255,255,255,.06); color: inherit; font: inherit; font-weight: 600; text-align: center; cursor: pointer; }
+button:hover, .btn:hover { background: rgba(255,255,255,.12); }
+button.primary { background: var(--ink); color: #111; border-color: transparent; }
+button.primary:hover { background: #fff; }
+details { margin: 4px 0 14px; }
+summary { cursor: pointer; color: var(--muted); padding: 6px 0; }
+#presets button { font-weight: 500; text-align: left; margin-bottom: 6px; padding: 9px 14px; }
+.legend { margin: 8px 0 0; padding: 14px 0 0 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+.legend li { margin-bottom: 4px; }
+.legend b { color: var(--ink); font-weight: 600; }
+#error { color: #ff9a8a; margin: 10px 0 0; }
+#error:empty { display: none; }
+
+#hud { position: fixed; top: 14px; left: 14px; width: 290px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line);
+  background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 13px; font-variant-numeric: tabular-nums; }
+#hud[hidden] { display: none; }
+.row { display: flex; align-items: center; gap: 10px; min-height: 26px; }
+.row.top { align-items: flex-start; padding-top: 4px; }
+.k { width: 56px; flex: none; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; }
+.v { font-weight: 650; font-size: 15px; min-width: 64px; }
+.v.small { font-size: 12.5px; font-weight: 500; }
+.bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .2s; }
+.beats { display: flex; gap: 6px; }
+.beats i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.12); transition: background .08s; }
+.beats i.on { background: var(--ink); }
+.beats i.down.on { background: #ffd36e; }
+.genres { flex: 1; display: grid; gap: 3px; }
+.genres div { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; font-size: 12.5px; }
+.genres div:first-child { font-weight: 650; }
+.genres span.g { height: 4px; border-radius: 2px; background: var(--ink); }
+.meters { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 10.5px; color: var(--muted); }
+.meters span { display: grid; gap: 3px; }
+.meters i { display: block; height: 18px; border-radius: 3px; background: linear-gradient(to top, var(--ink) var(--v, 0%), rgba(255,255,255,.1) var(--v, 0%)); }
+.contour { font-size: 18px; width: 20px; text-align: center; }
+.controls { display: grid; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.controls label { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); }
+.controls select, .controls input { flex: 1; max-width: 160px; }
+.controls select { background: rgba(255,255,255,.08); color: inherit; border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; font: inherit; }
+.controls button { margin: 2px 0 0; padding: 8px; }
+.hint { margin: 8px 0 0; color: var(--muted); font-size: 11.5px; }
+@media (max-width: 520px) { #hud { width: calc(100% - 28px); } }

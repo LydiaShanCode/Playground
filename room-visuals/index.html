@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Room Visuals</title>
+<script>/* relative paths need the trailing slash */ if (!location.pathname.endsWith('/') && !location.pathname.endsWith('.html')) location.replace(location.pathname + '/' + location.search);</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<section id="start" class="panel">
+  <h1>Room Visuals</h1>
+  <p class="lede">Visuals that listen to the music in the room and follow its tempo, key, genre, rhythm and melodic phrasing.</p>
+  <button id="btn-mic" class="primary">Listen with microphone</button>
+  <label class="btn" for="file">Play an audio file<input id="file" type="file" accept="audio/*" hidden></label>
+  <details>
+    <summary>Try the demo band</summary>
+    <div id="presets"></div>
+  </details>
+  <ul class="legend">
+    <li><b>BPM</b> sets the speed. Slower music moves slower, with longer trails and softer pulses.</li>
+    <li><b>Key</b> sets the colours, walking the circle of fifths. Minor keys are darker and cooler.</li>
+    <li><b>Genre</b> picks the scene: tunnels, shards, orbits or a drifting particle field.</li>
+    <li><b>Rhythm</b>: kicks send shockwaves, snares flash, hi-hats sparkle, the downbeat zooms.</li>
+    <li><b>Melodic phrasing</b>: a ribbon traces the melody, then blooms if the phrase comes home to the key.</li>
+  </ul>
+  <p id="error" role="alert"></p>
+</section>
+
+<aside id="hud" hidden>
+  <div class="row"><span class="k">BPM</span><span id="h-bpm" class="v">—</span><span class="bar"><i id="h-bpmc"></i></span></div>
+  <div class="row"><span class="k">Beat</span><span id="h-beats" class="beats"><i></i><i></i><i></i><i></i></span></div>
+  <div class="row"><span class="k">Key</span><span id="h-key" class="v">—</span><span class="bar"><i id="h-keyc"></i></span></div>
+  <div class="row top"><span class="k">Genre</span>
+    <div id="h-genre" class="genres"></div>
+  </div>
+  <div class="row"><span class="k">Rhythm</span>
+    <span class="meters"><span>kick<i id="h-kick"></i></span><span>snare<i id="h-snare"></i></span><span>hat<i id="h-hat"></i></span><span>swing<i id="h-sync"></i></span></span>
+  </div>
+  <div class="row"><span class="k">Melody</span><span id="h-note" class="v">—</span><span id="h-contour" class="contour"></span></div>
+  <div class="row"><span class="k">Phrase</span><span id="h-phrase" class="v small">—</span><span class="bar"><i id="h-phrasep"></i></span></div>
+  <div class="controls">
+    <label>Genre <select id="genre-lock"><option value="">Auto</option></select></label>
+    <label>Sensitivity <input id="sens" type="range" min="0.25" max="4" step="0.05" value="1"></label>
+    <button id="btn-stop">Stop</button>
+  </div>
+  <p class="hint">H hides this panel · F goes full screen</p>
+</aside>
+
+<audio id="player" crossorigin="anonymous" hidden></audio>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
